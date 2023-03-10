@@ -41,12 +41,28 @@
 #define LASTLOG2_DEBUG        01  /* send info to syslog(3) */
 #define LASTLOG2_QUIET        02  /* keep quiet about things */
 
+static const char *lastlog2_path = _PATH_LASTLOG2;
+
+/* From pam_inline.h
+ *
+ * Returns NULL if STR does not start with PREFIX,
+ * or a pointer to the first char in STR after PREFIX.
+ */
+static inline const char *
+skip_prefix (const char *str, const char *prefix)
+{
+  size_t prefix_len = strlen (prefix);
+
+  return strncmp(str, prefix, prefix_len) ? NULL : str + prefix_len;
+}
+
 static int
 _pam_parse_args (pam_handle_t *pamh,
 		 int flags, int argc,
 		 const char **argv)
 {
   int ctrl = 0;
+  const char *str;
 
   /* does the application require quiet? */
   if (flags & PAM_SILENT)
@@ -55,10 +71,12 @@ _pam_parse_args (pam_handle_t *pamh,
   /* step through arguments */
   for (; argc-- > 0; ++argv)
     {
-      if (!strcmp (*argv,"debug"))
+      if (strcmp (*argv, "debug") == 0)
 	ctrl |= LASTLOG2_DEBUG;
-      else if (!strcmp (*argv,"silent"))
+      else if (strcmp (*argv, "silent") == 0)
 	ctrl |= LASTLOG2_QUIET;
+      else if ((str = skip_prefix(*argv, "database=")) != NULL)
+	lastlog2_path = str;
       else
 	pam_syslog (pamh, LOG_ERR, "Unknown option: %s", *argv);
     }
@@ -74,12 +92,12 @@ read_sqlite(pam_handle_t *pamh, const char *user, time_t *ll_time,
   sqlite3_stmt *res;
   int r;
 
-  if ((r = sqlite3_open_v2 (_PATH_LASTLOG2, &db, SQLITE_OPEN_READONLY, NULL)) != SQLITE_OK)
+  if ((r = sqlite3_open_v2 (lastlog2_path, &db, SQLITE_OPEN_READONLY, NULL)) != SQLITE_OK)
     {
       /* Don't print error if file does not exist yet */
       if (r != SQLITE_CANTOPEN)
-	pam_syslog (pamh, LOG_ERR, "Cannot open database: %s",
-		    sqlite3_errmsg (db));
+	pam_syslog (pamh, LOG_ERR, "Cannot open database (%s): %s",
+		    lastlog2_path, sqlite3_errmsg (db));
       sqlite3_close (db);
       return PAM_SYSTEM_ERR;
     }
@@ -141,10 +159,10 @@ write_sqlite(pam_handle_t *pamh, const char *user, time_t ll_time,
   sqlite3 *db;
   char *err_msg = 0;
 
-  if (sqlite3_open (_PATH_LASTLOG2, &db) != SQLITE_OK)
+  if (sqlite3_open (lastlog2_path, &db) != SQLITE_OK)
     {
-      pam_syslog (pamh, LOG_ERR, "Cannot open database: %s",
-		  sqlite3_errmsg (db));
+      pam_syslog (pamh, LOG_ERR, "Cannot open/create database (%s): %s",
+		  lastlog2_path, sqlite3_errmsg (db));
       sqlite3_close (db);
       return PAM_SYSTEM_ERR;
     }
@@ -168,20 +186,6 @@ write_sqlite(pam_handle_t *pamh, const char *user, time_t ll_time,
   sqlite3_close (db);
 
   return PAM_SUCCESS;
-}
-
-
-/* From pam_inline.h
- *
- * Returns NULL if STR does not start with PREFIX,
- * or a pointer to the first char in STR after PREFIX.
- */
-static inline const char *
-skip_prefix(const char *str, const char *prefix)
-{
-  size_t prefix_len = strlen (prefix);
-
-  return strncmp(str, prefix, prefix_len) ? NULL : str + prefix_len;
 }
 
 static int
