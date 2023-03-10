@@ -91,9 +91,12 @@ pam_lastlog2 = shared_library(
   install_dir : pamlibdir
 )
 
-#lastlog2_c = ['src/lastlog2.c']
+lastlog2_c = ['src/lastlog2.c']
 
-# XXX executable('lastlog2', lastlog2_c, dependencies : libsqlite3)
+executable('lastlog2', 
+           lastlog2_c, 
+           include_directories : inc,
+           dependencies : libsqlite3)
 
 # Unit tests
 subdir('tests')
