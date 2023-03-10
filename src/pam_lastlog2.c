@@ -36,10 +36,10 @@
 #include <security/pam_modutil.h>
 #include <security/_pam_macros.h>
 
+#include "lastlog2.h"
+
 #define LASTLOG2_DEBUG        01  /* send info to syslog(3) */
 #define LASTLOG2_QUIET        02  /* keep quiet about things */
-
-#define _PATH_LASTLOG2 "/var/log/lastlog2.db"
 
 static int
 _pam_parse_args (pam_handle_t *pamh,

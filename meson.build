@@ -15,7 +15,7 @@ project(
 )
 
 cc = meson.get_compiler('c')
-pkg = import('pkgconfig')
+inc = include_directories('include')
 
 add_project_arguments(['-D_GNU_SOURCE=1',
 		       '-DXTSTRINGDEFINES',
@@ -83,6 +83,7 @@ pam_lastlog2 = shared_library(
   'pam_lastlog2',
   pam_lastlog2_c,
   name_prefix : '',
+  include_directories : inc,
   link_args : ['-shared', version_flag,],
   link_depends : pam_lastlog2_map,
   dependencies : [libpam, libsqlite3],
