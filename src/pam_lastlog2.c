@@ -125,9 +125,6 @@ read_sqlite(pam_handle_t *pamh, const char *user, time_t *ll_time,
       uc = sqlite3_column_text (res, 3);
       if (uc != NULL && strlen ((const char *)uc) > 0)
 	*rhost = strdup ((const char *)uc);
-
-      pam_syslog (pamh, LOG_DEBUG, "user=%s, ll_time=%ld, tty=%s, rhost=%s",
-		  luser, *ll_time, *tty, *rhost);
     }
 
   sqlite3_finalize(res);
