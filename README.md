@@ -31,6 +31,8 @@ The package constists of two binaries:
 * `pam_lastlog2.so` shows the last login of a user and stores the new login into the database.
 * `lastlog2` will display the last logins for all users, who did ever login.
 
+By default the database will be written as `/var/lib/lastlog/lastlog2.db`.
+
 ## Configuration
 
 The `pam_lastlog2.so` module will be added in the `session` section of the service, which should display the last login message and store the new data.
