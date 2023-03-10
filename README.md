@@ -26,6 +26,8 @@ Since there are only few applications which really support `lastlog`, the data i
 * The old `/var/log/lastlog` file can be imported into the new database.
 * The size of the database depends on the amount of users, not how big the biggest UID is.
 
+**IMPORTANT** To be Y2038 safe on 32bit architectures, the binaries needs to be build with a **64bit time_t**. This should be the standard on 64bit architectures.
+
 The package constists of two binaries:
 
 * `pam_lastlog2.so` shows the last login of a user and stores the new login into the database.
@@ -39,7 +41,7 @@ The `pam_lastlog2.so` module will be added in the `session` section of the servi
 On openSUSE Tumbleweed and MicroOS, the following line needs be added at the end of `/etc/pam.d/common-session`:
 
 ```
-session optional        pam_lastlog2.so
+session optional pam_lastlog2.so
 ```
 
 This line will create a new entry in the database for every user if an application calls the PAM framework.
