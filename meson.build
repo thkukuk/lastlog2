@@ -71,6 +71,18 @@ if pamlibdir == ''
         pamlibdir = rootlibdir / 'security'
 endif
 
+# Meson ignores the preceding arguments when joining paths if an absolute
+# component is encountered, so this should canonicalize various paths when they
+# are absolute or relative.
+prefixdir = get_option('prefix')
+if not prefixdir.startswith('/')
+        error('Prefix is not absolute: "@0@"'.format(prefixdir))
+endif
+if prefixdir != rootprefixdir and rootprefixdir != '/' and not prefixdir.strip('/').startswith(rootprefixdir.strip('/') + '/')
+        error('Prefix is not below root prefix (now rootprefix=@0@ prefix=@1@)'.format(rootprefixdir, prefixdir))
+endif
+tmpfilesdir = prefixdir / 'lib/tmpfiles.d'
+
 libpam = cc.find_library('pam')
 libsqlite3 = cc.find_library('sqlite3')
 
@@ -112,7 +124,10 @@ lastlog2_c = ['src/lastlog2.c']
 executable('lastlog2', 
            lastlog2_c, 
            include_directories : inc,
-           link_with : liblastlog2)
+           link_with : liblastlog2,
+           install : true)
+
+subdir('tmpfiles.d')
 
 # Unit tests
 subdir('tests')
