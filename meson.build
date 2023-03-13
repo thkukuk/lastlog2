@@ -9,7 +9,7 @@ project(
                   'buildtype=debugoptimized',
   		  'default_library=shared',
 		  'b_pie=true',
-		  'warning_level=3',],
+		  'warning_level=2',],
   license : ['BSD-2-Clause',],
   version : '0.0.1',
 )
@@ -74,19 +74,35 @@ endif
 libpam = cc.find_library('pam')
 libsqlite3 = cc.find_library('sqlite3')
 
-pam_lastlog2_map = 'src/pam_lastlog2.map'
-pam_lastlog2_c = files('src/pam_lastlog2.c')
+liblastlog2_c = files('lib/lastlog2.c')
+liblastlog2_map = 'lib/liblastlog2.map'
+liblastlog2_map_version = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), liblastlog2_map)
 
-version_flag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), pam_lastlog2_map)
+pam_lastlog2_c = files('src/pam_lastlog2.c')
+pam_lastlog2_map = 'src/pam_lastlog2.map'
+pam_lastlog2_map_version = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), pam_lastlog2_map)
+
+liblastlog2 = shared_library(
+  'lastlog2',
+  liblastlog2_c,
+  include_directories : inc,
+  link_args : ['-shared',
+               liblastlog2_map_version],
+  link_depends : liblastlog2_map,
+  dependencies : [libsqlite3],
+  install : true,
+  soversion : '0'
+)
 
 pam_lastlog2 = shared_library(
   'pam_lastlog2',
   pam_lastlog2_c,
   name_prefix : '',
   include_directories : inc,
-  link_args : ['-shared', version_flag,],
+  link_args : ['-shared', pam_lastlog2_map_version],
   link_depends : pam_lastlog2_map,
-  dependencies : [libpam, libsqlite3],
+  link_with : liblastlog2,
+  dependencies : [libpam],
   install : true,
   install_dir : pamlibdir
 )
@@ -96,7 +112,7 @@ lastlog2_c = ['src/lastlog2.c']
 executable('lastlog2', 
            lastlog2_c, 
            include_directories : inc,
-           dependencies : libsqlite3)
+           link_with : liblastlog2)
 
 # Unit tests
 subdir('tests')

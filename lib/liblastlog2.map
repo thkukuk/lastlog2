@@ -1,0 +1,9 @@
+LIBLASTLOG2_0.1 {
+  global:
+        ll2_read_all;
+	ll2_read_entry;
+        ll2_remove_entry;
+	ll2_write_entry;
+        ll2_update_login_time;
+  local: *;
+};

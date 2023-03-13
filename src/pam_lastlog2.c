@@ -30,7 +30,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
-#include <sqlite3.h>
 #include <security/pam_modules.h>
 #include <security/pam_ext.h>
 #include <security/pam_modutil.h>
@@ -85,116 +84,13 @@ _pam_parse_args (pam_handle_t *pamh,
 }
 
 static int
-read_sqlite(pam_handle_t *pamh, const char *user, time_t *ll_time,
-	    char **tty, char **rhost)
-{
-  sqlite3 *db;
-  sqlite3_stmt *res;
-  int r;
-
-  if ((r = sqlite3_open_v2 (lastlog2_path, &db, SQLITE_OPEN_READONLY, NULL)) != SQLITE_OK)
-    {
-      /* Don't print error if file does not exist yet */
-      if (r != SQLITE_CANTOPEN)
-	pam_syslog (pamh, LOG_ERR, "Cannot open database (%s): %s",
-		    lastlog2_path, sqlite3_errmsg (db));
-      sqlite3_close (db);
-      return PAM_SYSTEM_ERR;
-    }
-
-  char *sql = "SELECT * FROM Lastlog WHERE Name = ?";
-
-  if ((r = sqlite3_prepare_v2 (db, sql, -1, &res, 0)) != SQLITE_OK)
-    {
-      pam_syslog (pamh, LOG_ERR, "Failed to execute statement: %s",
-		  sqlite3_errmsg (db));
-      sqlite3_close (db);
-      return PAM_SYSTEM_ERR;
-    }
-
-  if ((r = sqlite3_bind_text (res, 1, user, -1, SQLITE_STATIC)) != SQLITE_OK)
-    {
-      pam_syslog (pamh, LOG_ERR, "Failed to create search query: %i, %s", r,
-		  sqlite3_errmsg (db));
-      sqlite3_finalize(res);
-      sqlite3_close (db);
-      return PAM_SYSTEM_ERR;
-    }
-
-  int step = sqlite3_step (res);
-
-  if (step == SQLITE_ROW)
-    {
-      const unsigned char *luser = sqlite3_column_text(res, 0);
-      const unsigned char *uc;
-
-      if (strcmp ((const char *)luser, user) != 0)
-	{
-	  pam_syslog (pamh, LOG_ERR, "Returned data is for %s, not %s", luser, user);
-	  sqlite3_close (db);
-	  return PAM_SYSTEM_ERR;
-	}
-
-      *ll_time = sqlite3_column_int64 (res, 1);
-      uc = sqlite3_column_text (res, 2);
-      if (uc != NULL && strlen ((const char *)uc) > 0)
-	*tty = strdup ((const char *)uc);
-
-      uc = sqlite3_column_text (res, 3);
-      if (uc != NULL && strlen ((const char *)uc) > 0)
-	*rhost = strdup ((const char *)uc);
-    }
-
-  sqlite3_finalize(res);
-  sqlite3_close (db);
-
-  return PAM_SUCCESS;
-}
-
-
-static int
-write_sqlite(pam_handle_t *pamh, const char *user, time_t ll_time,
-	     const char *tty, const char *rhost)
-{
-  sqlite3 *db;
-  char *err_msg = 0;
-
-  if (sqlite3_open (lastlog2_path, &db) != SQLITE_OK)
-    {
-      pam_syslog (pamh, LOG_ERR, "Cannot open/create database (%s): %s",
-		  lastlog2_path, sqlite3_errmsg (db));
-      sqlite3_close (db);
-      return PAM_SYSTEM_ERR;
-    }
-
-  char *sql;
-  if (asprintf (&sql, "CREATE TABLE IF NOT EXISTS Lastlog(Name TEXT PRIMARY KEY, Time INT, TTY TEXT, RemoteHost TEXT);"
-		"REPLACE INTO Lastlog VALUES('%s', %lu, '%s', '%s');",
-		user, ll_time, tty, rhost) < 0)
-    return PAM_SYSTEM_ERR;
-
-  if (sqlite3_exec (db, sql, 0, 0, &err_msg) != SQLITE_OK)
-    {
-      pam_syslog (pamh, LOG_ERR, "SQL error: %s", err_msg);
-      sqlite3_free (err_msg);
-      sqlite3_close (db);
-      free (sql);
-      return PAM_SYSTEM_ERR;
-    }
-
-  free (sql);
-  sqlite3_close (db);
-
-  return PAM_SUCCESS;
-}
-
-static int
 write_login_data (pam_handle_t *pamh, int ctrl, const char *user)
 {
   const void *void_str;
   const char *tty;
   const char *rhost;
   time_t ll_time;
+  char *error = NULL;
   int retval;
 
   void_str = NULL;
@@ -225,7 +121,19 @@ write_login_data (pam_handle_t *pamh, int ctrl, const char *user)
   if (time (&ll_time) < 0)
     return PAM_SYSTEM_ERR;
 
-  return write_sqlite (pamh, user, ll_time, tty, rhost);
+  if (ll2_write_entry (lastlog2_path, user, ll_time, tty, rhost, &error) != 0)
+    {
+      if (error)
+	{
+	  pam_syslog (pamh, LOG_ERR, error);
+	  free (error);
+	}
+      else
+	pam_syslog (pamh, LOG_ERR, "Unknown error writing to database %s", lastlog2_path);
+      return PAM_SYSTEM_ERR;
+    }
+
+  return PAM_SUCCESS;
 }
 
 static int
@@ -236,13 +144,23 @@ show_lastlogin (pam_handle_t *pamh, int ctrl, const char *user)
   char *rhost = NULL;
   char *date = NULL;
   char the_time[256];
-  int retval;
+  char *error = NULL;
+  int retval = PAM_SUCCESS;
 
   if (ctrl & LASTLOG2_QUIET)
     return PAM_IGNORE;
 
-  if ((retval = read_sqlite (pamh, user, &ll_time, &tty, &rhost)) != PAM_SUCCESS)
-    return retval;
+  if (ll2_read_entry (lastlog2_path, user, &ll_time, &tty, &rhost, &error) != 0)
+    {
+      if (error)
+	{
+	  pam_syslog (pamh, LOG_ERR, error);
+	  free (error);
+	}
+      else
+	pam_syslog (pamh, LOG_ERR, "Unknown error reading database %s", lastlog2_path);
+      return PAM_SYSTEM_ERR;
+    }
 
   if (ll_time)
     {
