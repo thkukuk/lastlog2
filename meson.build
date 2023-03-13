@@ -105,6 +105,7 @@ liblastlog2 = shared_library(
   install : true,
   soversion : '0'
 )
+install_headers('include/lastlog2.h')
 
 pam_lastlog2 = shared_library(
   'pam_lastlog2',
