@@ -272,7 +272,7 @@ main (int argc, char **argv)
 	  free (error);
 	}
       else
-	fprintf (stderr, "Couldn't read entry for '%s'\n", user);
+	fprintf (stderr, "Couldn't read entries for all users\n");
 
       exit (EXIT_FAILURE);
     }
