@@ -1,7 +1,7 @@
 project(
   'lastlog2',
   'c',
-  meson_version : '>= 0.49.0',
+  meson_version : '>= 0.53.0',
   default_options : [
                   'prefix=/usr',
                   'sysconfdir=/etc',
