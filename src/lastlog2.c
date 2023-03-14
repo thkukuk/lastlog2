@@ -37,6 +37,11 @@
 
 static char *lastlog2_path = _PATH_LASTLOG2;
 
+static int bflg = 0;
+static time_t b_days = 0;
+static int tflg = 0;
+static time_t t_days = 0;
+
 static int
 print_entry (const char *user, time_t ll_time,
 	     const char *tty, const char *rhost)
@@ -50,11 +55,13 @@ print_entry (const char *user, time_t ll_time,
      so LL-address + % + IFNAMSIZ. */
   const int maxIPv6Addrlen = 42;
 
-  if (!once)
-    {
-      printf ("Username         Port     From%*sLatest\n", maxIPv6Addrlen-3, " ");
-      once = 1;
-    }
+  /* Print only if older than b days */
+  if (bflg && ((time (NULL) - ll_time) < b_days))
+    return 0;
+
+  /* Print only if newer than t days */
+  if (tflg && ((time (NULL) - ll_time) > t_days))
+    return 0;
 
   tm = localtime (&ll_time);
   if (tm == NULL)
@@ -68,6 +75,11 @@ print_entry (const char *user, time_t ll_time,
   if (ll_time == (time_t) 0)
     datep = "**Never logged in**";
 
+  if (!once)
+    {
+      printf ("Username         Port     From%*sLatest\n", maxIPv6Addrlen-3, " ");
+      once = 1;
+    }
   printf ("%-16s %-8.8s %*s%s\n", user, tty ? tty : "",
 	  -maxIPv6Addrlen, rhost ? rhost : "", datep);
 
@@ -106,12 +118,8 @@ main (int argc, char **argv)
     {NULL, 0, NULL, '\0'}
   };
   char *error = NULL;
-  int bflg = 0;
-  time_t b_days = 0;
   int Cflg = 0;
   int Sflg = 0;
-  int tflg = 0;
-  time_t t_days = 0;
   int uflg = 0;
   const char *user = NULL;
   int c;
