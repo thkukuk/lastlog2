@@ -25,6 +25,7 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <pwd.h>
 #include <time.h>
 #include <errno.h>
 #include <stdio.h>
@@ -103,6 +104,16 @@ usage (int retval)
   fputs ("  -u, --user LOGIN      Print lastlog record of the specified LOGIN\n", output);
   fputs ("\n", output);
   exit (retval);
+}
+
+/* Check if an user exists on the system.
+   If yes, return 0, else return -1. */
+static int
+check_user (const char *name)
+{
+  if (getpwnam (name) == NULL)
+    return -1;
+  return 0;
 }
 
 int
@@ -213,6 +224,12 @@ main (int argc, char **argv)
 	  usage (EXIT_FAILURE);
 	}
 
+      if ((Cflg || Sflg) && check_user (user) != 0)
+	{
+	  fprintf (stderr, "User '%s' does not exist.\n", user);
+	  return -1;
+	}
+
       if (Cflg)
 	{
 	  if (ll2_remove_entry (lastlog2_path, user, &error) != 0)
@@ -277,18 +294,14 @@ main (int argc, char **argv)
       char *tty = NULL;
       char *rhost = NULL;
 
-      if (ll2_read_entry (lastlog2_path, user, &ll_time, &tty, &rhost, &error) != 0)
+      if (check_user (user) != 0)
 	{
-	  if (error)
-	    {
-	      fprintf (stderr, "%s\n", error);
-	      free (error);
-	    }
-	  else
-	    fprintf (stderr, "Couldn't read entry for '%s'\n", user);
-
-	  exit (EXIT_FAILURE);
+	  fprintf (stderr, "User '%s' does not exist.\n", user);
+	  return -1;
 	}
+
+      /* We ignore errors, if the user is not in the database he did never login */
+      ll2_read_entry (lastlog2_path, user, &ll_time, &tty, &rhost, NULL);
 
       print_entry(user, ll_time, tty, rhost);
 
