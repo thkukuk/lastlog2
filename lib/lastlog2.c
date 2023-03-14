@@ -166,8 +166,9 @@ write_entry (sqlite3 *db, const char *user,
   char *sql;
 
   if (asprintf (&sql, "CREATE TABLE IF NOT EXISTS Lastlog(Name TEXT PRIMARY KEY, Time INT, TTY TEXT, RemoteHost TEXT);"
-		"REPLACE INTO Lastlog VALUES('%s', %lu, '%s', '%s');",
-		user, ll_time, tty ? tty : "", rhost ? rhost : "") < 0)
+		"REPLACE INTO Lastlog VALUES('%s', %llu, '%s', '%s');",
+		user, (long long int)ll_time, tty ? tty : "",
+		rhost ? rhost : "") < 0)
     {
       *error = strdup("Out of memory");
       return -1;
