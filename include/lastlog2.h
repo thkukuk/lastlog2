@@ -29,19 +29,21 @@
 
 #define _PATH_LASTLOG2 "/var/lib/lastlog/lastlog2.db"
 
+#include <stdint.h>
+
 /* Write a new entry. Returns 0 on success, -1 on failure. */
 extern int ll2_write_entry (const char *lastlog2_path, const char *user,
-			    time_t ll_time, const char *tty,
+			    int64_t ll_time, const char *tty,
 			    const char *rhost, char **error);
 extern int ll2_read_all (const char *lastlog2_path,
-			 int (*callback)(const char *user, time_t ll_time,
+			 int (*callback)(const char *user, int64_t ll_time,
 					 const char *tty, const char *rhost),
 			   char **error);
 extern int ll2_read_entry (const char *lastlog2_path, const char *user,
-			   time_t *ll_time, char **tty,
+			   int64_t *ll_time, char **tty,
 			   char **rhost, char **error);
 extern int ll2_update_login_time (const char *lastlog2_path,
-				  const char *user, time_t ll_time,
+				  const char *user, int64_t ll_time,
 				  char **error);
 extern int ll2_remove_entry (const char *lastlog2_path, const char *user,
 			     char **error);

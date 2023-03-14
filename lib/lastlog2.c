@@ -75,7 +75,7 @@ open_database_rw (const char *path, char **error)
 /* reads 1 entry from database and returns that. Returns 0 on success, -1 on failure. */
 static int
 read_entry (sqlite3 *db, const char *user,
-	    time_t *ll_time, char **tty, char **rhost, char **error)
+	    int64_t *ll_time, char **tty, char **rhost, char **error)
 {
   sqlite3_stmt *res;
   char *sql = "SELECT * FROM Lastlog WHERE Name = ?";
@@ -141,7 +141,7 @@ read_entry (sqlite3 *db, const char *user,
 /* reads 1 entry from database and returns that. Returns 0 on success, -1 on failure. */
 int
 ll2_read_entry (const char *lastlog2_path, const char *user,
-		time_t *ll_time, char **tty, char **rhost, char **error)
+		int64_t *ll_time, char **tty, char **rhost, char **error)
 {
   sqlite3 *db;
   int retval;
@@ -159,7 +159,7 @@ ll2_read_entry (const char *lastlog2_path, const char *user,
 /* Write a new entry. Returns 0 on success, -1 on failure. */
 static int
 write_entry (sqlite3 *db, const char *user,
-	     time_t ll_time, const char *tty, const char *rhost,
+	     int64_t ll_time, const char *tty, const char *rhost,
 		 char **error)
 {
   char *err_msg = NULL;
@@ -192,7 +192,7 @@ write_entry (sqlite3 *db, const char *user,
 /* Write a new entry. Returns 0 on success, -1 on failure. */
 int
 ll2_write_entry (const char *lastlog2_path, const char *user,
-		 time_t ll_time, const char *tty, const char *rhost,
+		 int64_t ll_time, const char *tty, const char *rhost,
 		 char **error)
 {
   sqlite3 *db;
@@ -211,7 +211,7 @@ ll2_write_entry (const char *lastlog2_path, const char *user,
 /* Write a new entry. Returns 0 on success, -1 on failure. */
 int
 ll2_update_login_time (const char *lastlog2_path, const char *user,
-		       time_t ll_time, char **error)
+		       int64_t ll_time, char **error)
 {
   sqlite3 *db;
   int retval;
@@ -240,7 +240,7 @@ ll2_update_login_time (const char *lastlog2_path, const char *user,
 }
 
 
-typedef int (*callback_f)(const char *user, time_t ll_time,
+typedef int (*callback_f)(const char *user, int64_t ll_time,
 			  const char *tty, const char *rhost);
 
 static int
@@ -259,7 +259,7 @@ callback (void *cb_func, int argc, char **argv, char **azColName)
     }
 
   errno = 0;
-  time_t ll_time = strtol(argv[1], &endptr, 10);
+  int64_t ll_time = strtol(argv[1], &endptr, 10);
   if ((errno == ERANGE && (ll_time == LONG_MAX || ll_time == LONG_MIN))
       || (endptr == argv[1]) || (*endptr != '\0'))
     fprintf (stderr, "Invalid numeric time entry for '%s': '%s'\n", argv[0], argv[1]);
@@ -273,7 +273,7 @@ callback (void *cb_func, int argc, char **argv, char **azColName)
    Returns 0 on success, -1 on failure. */
 int
 ll2_read_all  (const char *lastlog2_path,
-	       int (*cb_func)(const char *user, time_t ll_time,
+	       int (*cb_func)(const char *user, int64_t ll_time,
 			      const char *tty, const char *rhost),
 	       char **error)
 {
