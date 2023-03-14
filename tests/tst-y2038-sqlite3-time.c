@@ -47,7 +47,7 @@ main(void)
   time_t ll_time = 0;
   char *error = NULL;
 
-  printf ("Big time value is: %ld\n", BIG_TIME_VALUE);
+  printf ("Big time value is: %lld\n", (long long int)BIG_TIME_VALUE);
 
   if (ll2_write_entry (db_path, user, BIG_TIME_VALUE, NULL, NULL, &error) != 0)
     {
@@ -75,8 +75,8 @@ main(void)
 
   if (ll_time != BIG_TIME_VALUE)
     {
-      fprintf (stderr, "write/read entry time mismatch: written: %ld, got: %ld\n",
-	       BIG_TIME_VALUE, ll_time);
+      fprintf (stderr, "write/read entry time mismatch: written: %lld, got: %lld\n",
+	       (long long int)BIG_TIME_VALUE, (long long int)ll_time);
       return 1;
     }
 
