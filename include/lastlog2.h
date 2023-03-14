@@ -47,3 +47,6 @@ extern int ll2_update_login_time (const char *lastlog2_path,
 				  char **error);
 extern int ll2_remove_entry (const char *lastlog2_path, const char *user,
 			     char **error);
+
+extern int ll2_rename_user (const char *lastlog2_path, const char *user,
+			    const char *newname, char **error);

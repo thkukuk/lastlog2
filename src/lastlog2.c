@@ -93,13 +93,14 @@ usage (int retval)
 
   fprintf (output, "Usage: lastlog2 [options]\n\n"
 	   "Options:\n");
-  fputs ("  -b, --before DAYS    Print only records older than DAYS\n", output);
-  fputs ("  -C, --clear          Clear record of a user (requires -u)\n", output);
-  fputs ("  -d, --database FILE  Use FILE as lastlog2 database\n", output);
-  fputs ("  -h, --help           Display this help message and exit\n", output);
-  fputs ("  -S, --set            Set lastlog record to current time (requires -u)\n", output);
-  fputs ("  -t, --time DAYS      print only lastlog records more recent than DAYS\n", output);
-  fputs ("  -u, --user LOGIN     print lastlog record of the specified LOGIN\n", output);
+  fputs ("  -b, --before DAYS     Print only records older than DAYS\n", output);
+  fputs ("  -C, --clear           Clear record of a user (requires -u)\n", output);
+  fputs ("  -d, --database FILE   Use FILE as lastlog2 database\n", output);
+  fputs ("  -h, --help            Display this help message and exit\n", output);
+  fputs ("  -r, --rename NEWNAME  Rename existing user to NEWNAME (requires -u)\n", output);
+  fputs ("  -S, --set             Set lastlog record to current time (requires -u)\n", output);
+  fputs ("  -t, --time DAYS       Print only lastlog records more recent than DAYS\n", output);
+  fputs ("  -u, --user LOGIN      Print lastlog record of the specified LOGIN\n", output);
   fputs ("\n", output);
   exit (retval);
 }
@@ -112,6 +113,7 @@ main (int argc, char **argv)
     {"clear",    no_argument,       NULL, 'C'},
     {"database", required_argument, NULL, 'd'},
     {"help",     no_argument,       NULL, 'h'},
+    {"rename",   required_argument, NULL, 'r'},
     {"set",      no_argument,       NULL, 'S'},
     {"time",     required_argument, NULL, 't'},
     {"user",     required_argument, NULL, 'u'},
@@ -119,12 +121,14 @@ main (int argc, char **argv)
   };
   char *error = NULL;
   int Cflg = 0;
+  int rflg = 0;
   int Sflg = 0;
   int uflg = 0;
   const char *user = NULL;
+  const char *newname;
   int c;
 
-  while ((c = getopt_long (argc, argv, "b:Cd:hSt:u:", longopts, NULL)) != -1)
+  while ((c = getopt_long (argc, argv, "b:Cd:hr:St:u:", longopts, NULL)) != -1)
     {
       switch (c)
 	{
@@ -153,6 +157,10 @@ main (int argc, char **argv)
 	  break;
 	case 'h':
 	  usage (EXIT_SUCCESS);
+	  break;
+	case 'r':
+	  rflg = 1;
+	  newname = optarg;
 	  break;
 	case 'S':
 	  /* Set lastlog record of a user to the current time. */
@@ -197,11 +205,11 @@ main (int argc, char **argv)
       usage (EXIT_FAILURE);
     }
 
-  if (Cflg || Sflg)
+  if (Cflg || Sflg || rflg)
     {
       if (!uflg || strlen (user) == 0)
 	{
-	  fprintf (stderr, "Options -C and -S require option -u to specify the user\n");
+	  fprintf (stderr, "Options -C, -r and -S require option -u to specify the user\n");
 	  usage (EXIT_FAILURE);
 	}
 
@@ -243,6 +251,21 @@ main (int argc, char **argv)
 	      exit (EXIT_FAILURE);
 	    }
 
+	}
+
+      if (rflg)
+	{
+	  if (ll2_rename_user (lastlog2_path, user, newname, &error) != 0)
+	    {
+	      if (error)
+		{
+		  fprintf (stderr, "%s\n", error);
+		  free (error);
+		}
+	      else
+		fprintf (stderr, "Couldn't rename entry '%s' to '%s'\n", user, newname);
+	      exit (EXIT_FAILURE);
+	    }
 	}
 
       exit (EXIT_SUCCESS);

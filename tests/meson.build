@@ -18,3 +18,10 @@ tst_pam_lastlog2_output = executable('tst-pam_lastlog2-output',
 			link_with : liblastlog2)
 #test('tst-pam_lastlog2-output', tst_pam_lastlog2_output)
 test('tst-pam_lastlog2-output', find_program('tst-pam_lastlog2-output.sh'))
+
+tst_rename_user = executable('tst-rename-user',
+                        'tst-rename-user.c',
+                        include_directories : inc,
+                        link_with : liblastlog2)
+test('tst-rename-user', tst_rename_user)
+

@@ -77,6 +77,7 @@ static int
 read_entry (sqlite3 *db, const char *user,
 	    int64_t *ll_time, char **tty, char **rhost, char **error)
 {
+  int retval = 0;
   sqlite3_stmt *res;
   char *sql = "SELECT * FROM Lastlog WHERE Name = ?";
 
@@ -113,6 +114,7 @@ read_entry (sqlite3 *db, const char *user,
 	    if (asprintf (error, "Returned data is for %s, not %s", luser, user) < 0)
 	      *error = strdup("Out of memory");
 
+	  sqlite3_finalize (res);
 	  return -1;
 	}
 
@@ -132,10 +134,18 @@ read_entry (sqlite3 *db, const char *user,
 	    *rhost = strdup ((const char *)uc);
 	}
     }
+  else
+    {
+      if (error)
+	if (asprintf (error, "User '%s' not found (%d)", user, step) < 0)
+	  *error = strdup("Out of memory");
 
-  sqlite3_finalize(res);
+      retval = -1;
+    }
 
-  return 0;
+  sqlite3_finalize (res);
+
+  return retval;
 }
 
 /* reads 1 entry from database and returns that. Returns 0 on success, -1 on failure. */
@@ -343,6 +353,48 @@ ll2_remove_entry (const char *lastlog2_path, const char *user,
   retval = remove_entry (db, user, error);
 
   sqlite3_close (db);
+
+  return retval;
+}
+
+/* Renames an user entry. Returns 0 on success, -1 on failure. */
+int
+ll2_rename_user (const char *lastlog2_path, const char *user,
+		 const char *newname, char **error)
+{
+  sqlite3 *db;
+  time_t ll_time;
+  char *tty;
+  char *rhost;
+  int retval;
+
+  if ((db = open_database_rw (lastlog2_path, error)) == NULL)
+    return -1;
+
+  if (read_entry (db, user, &ll_time, &tty, &rhost, error) != 0)
+    {
+      sqlite3_close (db);
+      return -1;
+    }
+
+  if (write_entry (db, newname, ll_time, tty, rhost, error) != 0)
+    {
+      sqlite3_close (db);
+      if (tty)
+	free (tty);
+      if (rhost)
+	free (rhost);
+      return -1;
+    }
+
+  retval = remove_entry (db, user, error);
+
+  sqlite3_close (db);
+
+  if (tty)
+    free (tty);
+  if (rhost)
+    free (rhost);
 
   return retval;
 }
