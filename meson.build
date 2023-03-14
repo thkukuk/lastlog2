@@ -19,7 +19,9 @@ inc = include_directories('include')
 
 add_project_arguments(['-D_GNU_SOURCE=1',
 		       '-DXTSTRINGDEFINES',
-		       '-D_FORTIFY_SOURCE=2'], language : 'c')
+		       '-D_FORTIFY_SOURCE=2',
+                       '-D_FILE_OFFSET_BITS=64',
+                       '-D_TIME_BITS=64'], language : 'c')
 
 possible_cc_flags = [
                   '-Dwerror=true',
