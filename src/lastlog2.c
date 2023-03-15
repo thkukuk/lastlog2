@@ -136,7 +136,7 @@ main (int argc, char **argv)
   int Sflg = 0;
   int uflg = 0;
   const char *user = NULL;
-  const char *newname;
+  const char *newname = NULL;
   int c;
 
   while ((c = getopt_long (argc, argv, "b:Cd:hr:St:u:", longopts, NULL)) != -1)
