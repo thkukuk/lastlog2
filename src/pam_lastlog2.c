@@ -148,7 +148,7 @@ show_lastlogin (pam_handle_t *pamh, int ctrl, const char *user)
   int retval = PAM_SUCCESS;
 
   if (ctrl & LASTLOG2_QUIET)
-    return PAM_IGNORE;
+    return PAM_SUCCESS;
 
   if (ll2_read_entry (lastlog2_path, user, &ll_time, &tty, &rhost, &error) != 0)
     {
@@ -203,7 +203,7 @@ pam_sm_setcred (pam_handle_t *pamh __attribute__((__unused__)),
 		int argc __attribute__((__unused__)),
 		const char **argv __attribute__((__unused__)))
 {
-  return PAM_SUCCESS;
+  return PAM_IGNORE;
 }
 
 int
