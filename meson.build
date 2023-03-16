@@ -135,5 +135,5 @@ subdir('tmpfiles.d')
 # Unit tests
 subdir('tests')
 
-# documentation
-#subdir('doc')
+# Manual pages
+subdir('man')
