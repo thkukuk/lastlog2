@@ -1,0 +1,172 @@
+<refentry xmlns="http://docbook.org/ns/docbook" version="5.0" xml:id="lastlog2">
+  <refmeta>
+    <refentrytitle>lastlog2</refentrytitle>
+    <manvolnum>8</manvolnum>
+    <refmiscinfo class="source">lastlog2</refmiscinfo>
+    <refmiscinfo class="manual">lastlog2</refmiscinfo>
+  </refmeta>
+  
+  <refnamediv>
+    <refname>lastlog2</refname>
+    <refpurpose>display date of last login for all users or a specific one</refpurpose>
+  </refnamediv>
+  
+  <refsynopsisdiv>
+    <cmdsynopsis sepchar=" ">
+      <command>lastlog2</command>
+      <arg choice="opt" rep="repeat">
+       option
+      </arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+
+    <title>DESCRIPTION</title>
+
+    <para>
+      <command>lastlog2</command> displays the content of the last login
+      database. The <replaceable>login name</replaceable>, 
+      <replaceable>last login time</replaceable>, <replaceable>tty</replaceable>
+      and <replaceable>remote host</replaceable> will be printed.
+      The default (no flags) causes all last login entries to be printed, sorted
+      by the order as written the first time into the database.
+    </para>
+    <para>
+      Compared to <command>lastlog</command> this command is Y2038 safe and uses
+      sqlite3 to store the information.
+    </para>
+  </refsect1>
+
+  <refsect1>
+
+    <title>OPTIONS</title>
+    <variablelist>
+      <varlistentry>
+        <term>
+          <option>-b, --before</option> <replaceable>DAYS</replaceable>
+        </term>
+        <listitem>
+          <para>
+            Print only last login records older than <replaceable>DAYS</replaceable>.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>-C, --clear</option>
+        </term>
+        <listitem>
+          <para>
+            Clear last login record of a user. This option can be used only together
+            with <option>-u</option> (<option>--user</option>).
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>-d, --database</option> <replaceable>FILE</replaceable>
+        </term>
+        <listitem>
+          <para>
+            Use <replaceable>FILE</replaceable> as lastlog2 database.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>-h, --help</option>
+        </term>
+        <listitem>
+          <para>
+            Display help message and exit.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>-r, --rename</option> <replaceable>NEWNAME</replaceable>
+        </term>
+        <listitem>
+          <para>
+            Rename existing user to <replaceable>NEWNAME</replaceable>.
+            This option can only be used together with <option>-u</option>
+            (<option>--user</option>).
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>-S, --set</option>
+        </term>
+        <listitem>
+          <para>
+            Set last login record of a user to the current time. This option
+            can only be used together with <option>-u</option>
+            (<option>--user</option>).
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>-t, --time</option> <replaceable>DAYS</replaceable>
+        </term>
+        <listitem>
+          <para>
+            Print only last login records more recent than
+            <replaceable>DAYS</replaceable>.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>-u, --user</option> <replaceable>LOGIN</replaceable>
+        </term>
+        <listitem>
+          <para>
+            Print only the last login record of the user
+            <replaceable>LOGIN</replaceable>.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <para>
+      If the user has never logged in the message 
+      <option>** Never logged in**</option> will be displayed instead of
+      the port and time.
+    </para>
+    <para>
+      Only the entries for the current users of the system will be displayed.
+      Other entries may exist for users that were deleted previously.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>FILES</title>
+    <variablelist>
+      <varlistentry>
+        <term>/var/lib/lastlog/lastlog2.db</term>
+        <listitem>
+          <para>Lastlog2 logging database file</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para>
+      <citerefentry>
+	<refentrytitle>pam_lastlog2</refentrytitle><manvolnum>8</manvolnum>
+      </citerefentry>,
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>AUTHOR</title>
+    <para>
+      lastlog2 was written by Thorsten Kukuk &lt;kukuk@suse.com&gt;.
+    </para>
+  </refsect1>
+  
+</refentry>

@@ -21,4 +21,10 @@ custom_target('pam_lastlog2.8',
               command : xslt_cmd + [custom_man_xsl, '@INPUT@'],
               install : want_man,
               install_dir : mandir8)
+custom_target('lastlog2.8',
+              input : 'lastlog2.8.xml',
+              output : 'lastlog2.8',
+              command : xslt_cmd + [custom_man_xsl, '@INPUT@'],
+              install : want_man,
+              install_dir : mandir8)
 endif
