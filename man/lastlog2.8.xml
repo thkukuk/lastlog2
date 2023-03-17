@@ -5,12 +5,12 @@
     <refmiscinfo class="source">lastlog2 %version%</refmiscinfo>
     <refmiscinfo class="manual">lastlog2</refmiscinfo>
   </refmeta>
-  
+
   <refnamediv>
     <refname>lastlog2</refname>
     <refpurpose>display date of last login for all users or a specific one</refpurpose>
   </refnamediv>
-  
+
   <refsynopsisdiv>
     <cmdsynopsis sepchar=" ">
       <command>lastlog2</command>
@@ -26,7 +26,7 @@
 
     <para>
       <command>lastlog2</command> displays the content of the last login
-      database. The <replaceable>login name</replaceable>, 
+      database. The <replaceable>login name</replaceable>,
       <replaceable>last login time</replaceable>, <replaceable>tty</replaceable>
       and <replaceable>remote host</replaceable> will be printed.
       The default (no flags) causes all last login entries to be printed, sorted
@@ -34,7 +34,7 @@
     </para>
     <para>
       Compared to <command>lastlog</command> this command is Y2038 safe and uses
-      sqlite3 to store the information.
+      sqlite3 to store the information and not a sparse file.
     </para>
   </refsect1>
 
@@ -80,6 +80,18 @@
         <listitem>
           <para>
             Display help message and exit.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>-i, --import</option> <replaceable>FILE</replaceable>
+        </term>
+        <listitem>
+          <para>
+            Import data from old lastlog file
+	    <replaceable>FILE</replaceable>. Existing entries in the lastlog2
+	    database will be overwritten.
           </para>
         </listitem>
       </varlistentry>
@@ -131,9 +143,9 @@
       </varlistentry>
     </variablelist>
     <para>
-      If the user has never logged in the message 
-      <option>** Never logged in**</option> will be displayed instead of
-      the port and time.
+      If the user has never logged in the message
+      <option>**Never logged in**</option> will be displayed in the latest
+      login time row.
     </para>
     <para>
       Only the entries for the current users of the system will be displayed.
@@ -152,7 +164,7 @@
       </varlistentry>
     </variablelist>
   </refsect1>
-  
+
   <refsect1>
     <title>SEE ALSO</title>
     <para>
@@ -168,5 +180,5 @@
       lastlog2 was written by Thorsten Kukuk &lt;kukuk@suse.com&gt;.
     </para>
   </refsect1>
-  
+
 </refentry>

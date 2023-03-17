@@ -50,3 +50,6 @@ extern int ll2_remove_entry (const char *lastlog2_path, const char *user,
 
 extern int ll2_rename_user (const char *lastlog2_path, const char *user,
 			    const char *newname, char **error);
+
+extern int ll2_import_lastlog (const char *lastlog2_path, 
+		               const char *lastlog_file, char **error);

@@ -1,4 +1,4 @@
-LIBLASTLOG2_0.1 {
+LIBLASTLOG2_0.5 {
   global:
         ll2_read_all;
 	ll2_read_entry;
@@ -6,5 +6,6 @@ LIBLASTLOG2_0.1 {
 	ll2_rename_user;
 	ll2_write_entry;
         ll2_update_login_time;
+        ll2_import_lastlog;
   local: *;
 };

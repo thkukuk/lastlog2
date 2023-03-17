@@ -25,13 +25,16 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <pwd.h>
 #include <errno.h>
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <sys/stat.h>
 #include <sqlite3.h>
+#include <lastlog.h>
 
 #include "lastlog2.h"
 
@@ -397,4 +400,81 @@ ll2_rename_user (const char *lastlog2_path, const char *user,
     free (rhost);
 
   return retval;
+}
+
+/* Import old lastlog file.
+   Returns 0 on success, -1 on failure. */
+int
+ll2_import_lastlog (const char *lastlog2_path, const char *lastlog_file,
+		    char **error)
+{
+  const struct passwd *pw;
+  struct stat statll;
+  sqlite3 *db;
+  FILE *ll_fp;
+
+  if ((db = open_database_rw (lastlog2_path, error)) == NULL)
+    return -1;
+
+  ll_fp = fopen (lastlog_file, "r");
+  if (ll_fp == NULL)
+    {
+      /* XXX asprintf/error */
+      perror (lastlog_file);
+      return -1;
+    }
+
+
+  if (fstat (fileno (ll_fp), &statll) != 0)
+    {
+      /* XXX asprintf/error */
+      fprintf (stderr, "Cannot get the size of %s: %s",
+	       lastlog_file, strerror (errno));
+      return -1;
+    }
+
+  setpwent ();
+  while ((pw = getpwent ()) != NULL )
+    {
+      off_t offset;
+      struct lastlog ll;
+
+      offset = (off_t) pw->pw_uid * sizeof (ll);
+
+      if ((offset + (off_t)sizeof (ll)) <= statll.st_size)
+	{
+	  if (fseeko (ll_fp, offset, SEEK_SET) == -1)
+	    continue; /* Ignore seek error */
+
+	  if (fread (&ll, sizeof (ll), 1, ll_fp) != 1)
+	    {
+	      /* XXX asprintf/error */
+	      fprintf (stderr, "Failed to get the entry for UID %lu",
+		       (unsigned long int)pw->pw_uid);
+	      return -1;
+	    }
+
+	  if (ll.ll_time != 0)
+	    {
+	      time_t ll_time;
+	      char tty[UT_LINESIZE+1];
+	      char rhost[UT_HOSTSIZE+1];
+
+	      ll_time = ll.ll_time;
+	      strncpy (tty, ll.ll_line, UT_LINESIZE);
+	      tty[UT_LINESIZE] = '\0';
+	      strncpy (rhost, ll.ll_host, UT_HOSTSIZE);
+	      rhost[UT_HOSTSIZE] = '\0';
+
+	      if (write_entry (db, pw->pw_name, ll_time, tty,
+			       rhost, error) != 0)
+		return -1;
+	    }
+	}
+    }
+  endpwent ();
+
+  sqlite3_close (db);
+
+  return 0;
 }

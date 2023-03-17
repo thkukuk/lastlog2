@@ -98,6 +98,7 @@ usage (int retval)
   fputs ("  -C, --clear           Clear record of a user (requires -u)\n", output);
   fputs ("  -d, --database FILE   Use FILE as lastlog2 database\n", output);
   fputs ("  -h, --help            Display this help message and exit\n", output);
+  fputs ("  -i, --import FILE     Import data from old lastlog file\n", output);
   fputs ("  -r, --rename NEWNAME  Rename existing user to NEWNAME (requires -u)\n", output);
   fputs ("  -S, --set             Set lastlog record to current time (requires -u)\n", output);
   fputs ("  -t, --time DAYS       Print only lastlog records more recent than DAYS\n", output);
@@ -124,6 +125,7 @@ main (int argc, char **argv)
     {"clear",    no_argument,       NULL, 'C'},
     {"database", required_argument, NULL, 'd'},
     {"help",     no_argument,       NULL, 'h'},
+    {"import",   required_argument, NULL, 'i'},
     {"rename",   required_argument, NULL, 'r'},
     {"set",      no_argument,       NULL, 'S'},
     {"time",     required_argument, NULL, 't'},
@@ -132,14 +134,16 @@ main (int argc, char **argv)
   };
   char *error = NULL;
   int Cflg = 0;
+  int iflg = 0;
   int rflg = 0;
   int Sflg = 0;
   int uflg = 0;
   const char *user = NULL;
   const char *newname = NULL;
+  const char *lastlog_file = NULL;
   int c;
 
-  while ((c = getopt_long (argc, argv, "b:Cd:hr:St:u:", longopts, NULL)) != -1)
+  while ((c = getopt_long (argc, argv, "b:Cd:hi:r:St:u:", longopts, NULL)) != -1)
     {
       switch (c)
 	{
@@ -168,6 +172,10 @@ main (int argc, char **argv)
 	  break;
 	case 'h':
 	  usage (EXIT_SUCCESS);
+	  break;
+	case 'i':
+	  lastlog_file = optarg;
+	  iflg = 1;
 	  break;
 	case 'r':
 	  rflg = 1;
@@ -210,10 +218,26 @@ main (int argc, char **argv)
       usage (EXIT_FAILURE);
     }
 
-  if (Cflg && Sflg)
+  if ((Cflg + Sflg + iflg) > 1)
     {
-      fprintf (stderr, "Option -C cannot be used together with option -S\n");
+      fprintf (stderr, "Option -C, -i and -S cannot be used together\n");
       usage (EXIT_FAILURE);
+    }
+
+  if (iflg)
+    {
+      if (ll2_import_lastlog (lastlog2_path, lastlog_file, &error) != 0)
+	{
+	  if (error)
+	    {
+	      fprintf (stderr, "%s\n", error);
+	      free (error);
+	    }
+	  else
+	    fprintf (stderr, "Couldn't import entries from '%s'\n", lastlog_file);
+	  exit (EXIT_FAILURE);
+	}
+      exit (EXIT_SUCCESS);
     }
 
   if (Cflg || Sflg || rflg)
@@ -227,7 +251,7 @@ main (int argc, char **argv)
       if ((Cflg || Sflg) && check_user (user) != 0)
 	{
 	  fprintf (stderr, "User '%s' does not exist.\n", user);
-	  return -1;
+	  exit (EXIT_FAILURE);
 	}
 
       if (Cflg)
