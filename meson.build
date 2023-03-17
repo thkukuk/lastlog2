@@ -11,7 +11,7 @@ project(
 		  'b_pie=true',
 		  'warning_level=2',],
   license : ['BSD-2-Clause',],
-  version : '0.0.1',
+  version : '0.5.0',
 )
 
 cc = meson.get_compiler('c')
@@ -83,6 +83,7 @@ endif
 if prefixdir != rootprefixdir and rootprefixdir != '/' and not prefixdir.strip('/').startswith(rootprefixdir.strip('/') + '/')
         error('Prefix is not below root prefix (now rootprefix=@0@ prefix=@1@)'.format(rootprefixdir, prefixdir))
 endif
+systemunitdir = prefixdir / 'lib/systemd/system'
 tmpfilesdir = prefixdir / 'lib/tmpfiles.d'
 
 libpam = cc.find_library('pam')
@@ -131,6 +132,7 @@ executable('lastlog2',
            install : true)
 
 subdir('tmpfiles.d')
+subdir('units')
 
 # Unit tests
 subdir('tests')
