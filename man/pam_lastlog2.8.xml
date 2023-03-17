@@ -2,7 +2,7 @@
   <refmeta>
     <refentrytitle>pam_lastlog2</refentrytitle>
     <manvolnum>8</manvolnum>
-    <refmiscinfo class="source">lastlog2</refmiscinfo>
+    <refmiscinfo class="source">lastlog2 %version%</refmiscinfo>
     <refmiscinfo class="manual">pam_lastlog2</refmiscinfo>
   </refmeta>
   
