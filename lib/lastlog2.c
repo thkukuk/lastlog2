@@ -75,7 +75,8 @@ open_database_rw (const char *path, char **error)
   return db;
 }
 
-/* reads 1 entry from database and returns that. Returns 0 on success, -1 on failure. */
+/* Reads one entry from database and returns that.
+   Returns 0 on success, -1 on failure. */
 static int
 read_entry (sqlite3 *db, const char *user,
 	    int64_t *ll_time, char **tty, char **rhost, char **error)
@@ -87,7 +88,8 @@ read_entry (sqlite3 *db, const char *user,
   if (sqlite3_prepare_v2 (db, sql, -1, &res, 0) != SQLITE_OK)
     {
       if (error)
-	if (asprintf (error, "Failed to execute statement: %s", sqlite3_errmsg (db)) < 0)
+	if (asprintf (error, "Failed to execute statement: %s",
+		      sqlite3_errmsg (db)) < 0)
 	  *error = strdup ("Out of memory");
 
       return -1;
@@ -419,17 +421,21 @@ ll2_import_lastlog (const char *lastlog2_path, const char *lastlog_file,
   ll_fp = fopen (lastlog_file, "r");
   if (ll_fp == NULL)
     {
-      /* XXX asprintf/error */
-      perror (lastlog_file);
+      if (error)
+	if (asprintf (error, "Failed to open '%s': %s",
+		      lastlog_file, strerror (errno)) < 0)
+	  *error = strdup ("Out of memory");
+
       return -1;
     }
 
 
   if (fstat (fileno (ll_fp), &statll) != 0)
     {
-      /* XXX asprintf/error */
-      fprintf (stderr, "Cannot get the size of %s: %s",
-	       lastlog_file, strerror (errno));
+      if (error)
+	if (asprintf (error, "Cannot get size of '%s': %s",
+		      lastlog_file, strerror (errno)) < 0)
+	  *error = strdup ("Out of memory");
       return -1;
     }
 
@@ -448,9 +454,13 @@ ll2_import_lastlog (const char *lastlog2_path, const char *lastlog_file,
 
 	  if (fread (&ll, sizeof (ll), 1, ll_fp) != 1)
 	    {
-	      /* XXX asprintf/error */
-	      fprintf (stderr, "Failed to get the entry for UID %lu",
-		       (unsigned long int)pw->pw_uid);
+	      if (error)
+		if (asprintf (error, "Failed to get the entry for UID '%lu'",
+			      (unsigned long int)pw->pw_uid) < 0)
+		  *error = strdup ("Out of memory");
+
+	      endpwent ();
+	      sqlite3_close (db);
 	      return -1;
 	    }
 
@@ -468,12 +478,16 @@ ll2_import_lastlog (const char *lastlog2_path, const char *lastlog_file,
 
 	      if (write_entry (db, pw->pw_name, ll_time, tty,
 			       rhost, error) != 0)
-		return -1;
+		{
+		  endpwent ();
+		  sqlite3_close (db);
+		  return -1;
+		}
 	    }
 	}
     }
-  endpwent ();
 
+  endpwent ();
   sqlite3_close (db);
 
   return 0;
