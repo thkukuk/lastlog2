@@ -10,7 +10,7 @@ The standard `/var/log/lastlog` implementation using `lastlog.h` from glibc uses
 
 For background on the Y2038 problem (32bit time_t counter will overflow) I suggest to start with the wikipedia [Year 2038 problem](https://en.wikipedia.org/wiki/Year_2038_problem) article.
 
-There is also a more [technical document](https://github.com/thkukuk/utmpx/blob/main/Y2038.md), describing the problem in more detail, which also contains a list of affected packages.
+There is also a more [technical document](https://github.com/thkukuk/utmpx/blob/main/Y2038.md), describing the problem in more detail, which also contains a list of affected packages. And a more highlevel blog "[Y2038, glibc and /var/log/lastlog on 64bit architectures](https://www.thkukuk.de/blog/Y2038_glibc_lastlog_64bit/)"
 
 Additional, `/var/log/lastlog` can become really huge if there are big UIDs in use on the system. Since it is a sparse file, this is normally not a problem, but depending on the filesystem or the tools used for backup, this can become a real problem.
 
@@ -18,7 +18,7 @@ Since there are only few applications which really support `lastlog`, the data i
 
 ## lastlog2
 
-`lastlog2` tries to solve all this problems:
+`lastlog2` tries to solve this problems:
 
 * It's using sqlite3 as database backend.
 * Data is only collected via a PAM module, so that every tools can make use of it, without modifying existing packages.
@@ -28,8 +28,9 @@ Since there are only few applications which really support `lastlog`, the data i
 
 **IMPORTANT** To be Y2038 safe on 32bit architectures, the binaries needs to be build with a **64bit time_t**. This should be the standard on 64bit architectures.
 
-The package constists of two binaries:
+The package constists of a library, PAM module and an application:
 
+* `liblastlog2.so.0` contains all high level functions to manage the data.
 * `pam_lastlog2.so` shows the last login of a user and stores the new login into the database.
 * `lastlog2` will display the last logins for all users, who did ever login.
 
