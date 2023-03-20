@@ -15,6 +15,7 @@ project(
 )
 
 cc = meson.get_compiler('c')
+pkg = import('pkgconfig')
 inc = include_directories('include')
 
 add_project_arguments(['-D_GNU_SOURCE=1',
@@ -109,6 +110,13 @@ liblastlog2 = shared_library(
   soversion : '0'
 )
 install_headers('include/lastlog2.h')
+
+pkg.generate(
+  liblastlog2,
+  name : 'liblastlog2',
+  description : 'library to manage last login data',
+  version : meson.project_version(),
+)
 
 pam_lastlog2 = shared_library(
   'pam_lastlog2',
