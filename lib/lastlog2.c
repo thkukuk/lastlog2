@@ -320,26 +320,44 @@ ll2_read_all  (const char *lastlog2_path,
 static int
 remove_entry (sqlite3 *db, const char *user, char **error)
 {
-  char *err_msg = NULL;
-  char *sql;
+  sqlite3_stmt *res;
+  char *sql = "DELETE FROM Lastlog WHERE Name = ?";
 
-  if (asprintf (&sql, "DELETE FROM Lastlog WHERE Name = '%s';", user) < 0)
-    {
-      *error = strdup("Out of memory");
-      return -1;
-    }
-
-  if (sqlite3_exec (db, sql, 0, 0, &err_msg) != SQLITE_OK)
+  if (sqlite3_prepare_v2 (db, sql, -1, &res, 0) != SQLITE_OK)
     {
       if (error)
-	if (asprintf (error, "SQL error: %s", err_msg) < 0)
-	  *error = strdup ("Out of memory");
-      sqlite3_free (err_msg);
-      free (sql);
+        if (asprintf (error, "Failed to execute statement: %s",
+                      sqlite3_errmsg (db)) < 0)
+          *error = strdup ("Out of memory");
+
       return -1;
     }
 
-  free (sql);
+  if (sqlite3_bind_text (res, 1, user, -1, SQLITE_STATIC) != SQLITE_OK)
+    {
+      if (error)
+        if (asprintf (error, "Failed to create delete statement: %s",
+                      sqlite3_errmsg (db)) < 0)
+          *error = strdup("Out of memory");
+
+      sqlite3_finalize(res);
+      return -1;
+    }
+
+  int step = sqlite3_step (res);
+
+  if (step != SQLITE_DONE)
+    {
+      if (error)
+        if (asprintf (error, "Delete statement did not return SQLITE_DONE: %d",
+                      step) < 0)
+          *error = strdup("Out of memory");
+
+      sqlite3_finalize(res);
+      return -1;
+    }
+
+  sqlite3_finalize(res);
 
   return 0;
 }
