@@ -25,3 +25,9 @@ tst_rename_user = executable('tst-rename-user',
                         link_with : liblastlog2)
 test('tst-rename-user', tst_rename_user)
 
+tst_remove_entry = executable('tst-remove-entry',
+                        'tst-remove-entry.c',
+                        include_directories : inc,
+                        link_with : liblastlog2)
+test('tst-remove-entry', tst_remove_entry)
+
