@@ -180,7 +180,7 @@ write_entry (sqlite3 *db, const char *user,
   char *err_msg = NULL;
   char *sql;
 
-  if (asprintf (&sql, "CREATE TABLE IF NOT EXISTS Lastlog(Name TEXT PRIMARY KEY, Time INT, TTY TEXT, RemoteHost TEXT);"
+  if (asprintf (&sql, "CREATE TABLE IF NOT EXISTS Lastlog(Name TEXT PRIMARY KEY, Time INTEGER, TTY TEXT, RemoteHost TEXT) STRICT;"
 		"REPLACE INTO Lastlog VALUES('%s', %llu, '%s', '%s');",
 		user, (long long int)ll_time, tty ? tty : "",
 		rhost ? rhost : "") < 0)
