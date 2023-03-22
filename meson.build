@@ -11,7 +11,7 @@ project(
 		  'b_pie=true',
 		  'warning_level=2',],
   license : ['BSD-2-Clause',],
-  version : '0.5.1',
+  version : '0.6.0',
 )
 
 cc = meson.get_compiler('c')
