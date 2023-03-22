@@ -31,3 +31,9 @@ tst_remove_entry = executable('tst-remove-entry',
                         link_with : liblastlog2)
 test('tst-remove-entry', tst_remove_entry)
 
+tst_write_read_user = executable('tst-write-read-user',
+                        'tst-write-read-user.c',
+                        include_directories : inc,
+                        link_with : liblastlog2)
+test('tst-write-read-user', tst_write_read_user)
+
