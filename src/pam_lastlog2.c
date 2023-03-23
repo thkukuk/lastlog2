@@ -125,7 +125,7 @@ write_login_data (pam_handle_t *pamh, int ctrl, const char *user)
     {
       if (error)
 	{
-	  pam_syslog (pamh, LOG_ERR, error);
+	  pam_syslog (pamh, LOG_ERR, "%s", error);
 	  free (error);
 	}
       else
@@ -154,7 +154,7 @@ show_lastlogin (pam_handle_t *pamh, int ctrl, const char *user)
     {
       if (error)
 	{
-	  pam_syslog (pamh, LOG_ERR, error);
+	  pam_syslog (pamh, LOG_ERR, "%s", error);
 	  free (error);
 	}
       else
