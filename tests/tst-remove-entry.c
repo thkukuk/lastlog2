@@ -81,5 +81,12 @@ main(void)
       return 1;
     }
 
+  if (error)
+    free (error);
+  if (tty)
+    free (tty);
+  if (rhost)
+    free (rhost);
+
   return 0;
 }

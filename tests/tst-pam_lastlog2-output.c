@@ -108,5 +108,12 @@ main(void)
       return 1;
     }
 
+  if (output)
+    free (output);
+  if (tty)
+    free (tty);
+  if (rhost)
+    free (rhost);
+
   return 0;
 }

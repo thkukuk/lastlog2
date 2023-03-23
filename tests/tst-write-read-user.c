@@ -93,6 +93,12 @@ test_args (const char *db_path, const char *user, int64_t ll_time,
       return 1;
     }
 
+  if (res_tty)
+    free (res_tty);
+
+  if (res_rhost)
+    free (res_rhost);
+
   return 0;
 }
 

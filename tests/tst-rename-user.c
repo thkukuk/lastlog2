@@ -82,6 +82,12 @@ main(void)
       return 1;
     }
 
+  if (error)
+    {
+      free (error);
+      error = NULL;
+    }
+
   if (ll2_read_entry (db_path, newname, &ll_time, &tty, &rhost, &error) != 0)
     {
       if (error)
@@ -98,6 +104,11 @@ main(void)
     {
       fprintf (stderr, "New entry data does not match old entry data!\n");
     }
+
+  if (tty)
+    free (tty);
+  if (rhost)
+    free (rhost);
 
   return 0;
 }
