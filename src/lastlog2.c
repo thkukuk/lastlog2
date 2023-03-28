@@ -103,6 +103,7 @@ usage (int retval)
   fputs ("  -S, --set             Set lastlog record to current time (requires -u)\n", output);
   fputs ("  -t, --time DAYS       Print only lastlog records more recent than DAYS\n", output);
   fputs ("  -u, --user LOGIN      Print lastlog record of the specified LOGIN\n", output);
+  fputs ("  -v, --version         Print version number and exit\n", output);
   fputs ("\n", output);
   exit (retval);
 }
@@ -130,6 +131,7 @@ main (int argc, char **argv)
     {"set",      no_argument,       NULL, 'S'},
     {"time",     required_argument, NULL, 't'},
     {"user",     required_argument, NULL, 'u'},
+    {"version",  no_argument,       NULL, 'v'},
     {NULL, 0, NULL, '\0'}
   };
   char *error = NULL;
@@ -143,7 +145,7 @@ main (int argc, char **argv)
   const char *lastlog_file = NULL;
   int c;
 
-  while ((c = getopt_long (argc, argv, "b:Cd:hi:r:St:u:", longopts, NULL)) != -1)
+  while ((c = getopt_long (argc, argv, "b:Cd:hi:r:St:u:v", longopts, NULL)) != -1)
     {
       switch (c)
 	{
@@ -205,6 +207,10 @@ main (int argc, char **argv)
 	case 'u':
 	  uflg = 1;
 	  user = optarg;
+	  break;
+	case 'v':
+	  printf ("lastlog2 %s\n", PROJECT_VERSION);
+	  exit (EXIT_SUCCESS);
 	  break;
 	default:
 	  usage (EXIT_FAILURE);

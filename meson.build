@@ -22,10 +22,10 @@ add_project_arguments(['-D_GNU_SOURCE=1',
 		       '-DXTSTRINGDEFINES',
 		       '-D_FORTIFY_SOURCE=2',
                        '-D_FILE_OFFSET_BITS=64',
-                       '-D_TIME_BITS=64'], language : 'c')
+                       '-D_TIME_BITS=64',
+                       '-DPROJECT_VERSION="@0@"'.format(meson.project_version()) ], language : 'c')
 
 possible_cc_flags = [
-                  '-Dwerror=true',
                   '-flto=auto',
                   '-ffat-lto-objects',
 		  '-fstack-protector-strong',
