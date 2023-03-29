@@ -1,3 +1,8 @@
+Version 0.6.2
+* Add more test cases
+* Add --version option for lastlog2
+* Fix a Y2038 problem on 32bit architectures
+
 Version 0.6.1
 * Use -Wformat-security and fix some warnings
 * Fix not free'd variables in test cases to avoid false positives from tests
