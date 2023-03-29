@@ -37,3 +37,9 @@ tst_write_read_user = executable('tst-write-read-user',
                         link_with : liblastlog2)
 test('tst-write-read-user', tst_write_read_user)
 
+tst_y2038_ll2_read_all = executable('tst-y2038-ll2_read_all',
+                        'tst-y2038-ll2_read_all.c',
+                        include_directories : inc,
+                        link_with : liblastlog2)
+test('tst-y2038-ll2_read_all', tst_y2038_ll2_read_all)
+
