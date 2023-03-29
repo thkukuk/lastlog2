@@ -334,8 +334,8 @@ callback (void *cb_func, int argc, char **argv, char **azColName)
     }
 
   errno = 0;
-  int64_t ll_time = strtol(argv[1], &endptr, 10);
-  if ((errno == ERANGE && (ll_time == LONG_MAX || ll_time == LONG_MIN))
+  int64_t ll_time = strtoll(argv[1], &endptr, 10);
+  if ((errno == ERANGE && (ll_time == INT64_MAX || ll_time == INT64_MIN))
       || (endptr == argv[1]) || (*endptr != '\0'))
     fprintf (stderr, "Invalid numeric time entry for '%s': '%s'\n", argv[0], argv[1]);
 
