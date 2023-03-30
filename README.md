@@ -39,7 +39,7 @@ By default the database will be written as `/var/lib/lastlog/lastlog2.db`.
 ## Configuration
 
 The `pam_lastlog2.so` module will be added in the `session` section of the service, which should display the last login message and store the new data.
-On openSUSE Tumbleweed and MicroOS, the following line needs be added at the end of `/etc/pam.d/common-session`:
+On openSUSE Tumbleweed and MicroOS, the following line needs be added to `/etc/pam.d/postlogin-session`:
 
 ```
 session optional pam_lastlog2.so
