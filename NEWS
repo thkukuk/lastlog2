@@ -1,3 +1,7 @@
+Version 0.7.0
+* pam_lastlog2: add silent_if= option
+* pam_lastlog2: try PAM_XDISPLAY if PAM_RHOST is not set
+
 Version 0.6.2
 * Add more test cases
 * Add --version option for lastlog2
