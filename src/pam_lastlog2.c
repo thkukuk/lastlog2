@@ -111,12 +111,24 @@ write_login_data (pam_handle_t *pamh, int ctrl, const char *user)
   void_str = NULL;
   retval = pam_get_item (pamh, PAM_RHOST, &void_str);
   if (retval != PAM_SUCCESS || void_str == NULL)
-    rhost = "";
+    {
+      void_str = NULL;
+      retval = pam_get_item (pamh, PAM_XDISPLAY, &void_str);
+      if (retval != PAM_SUCCESS || void_str == NULL)
+	rhost = "";
+      else
+	{
+	  rhost = void_str;
+	  if (ctrl & LASTLOG2_DEBUG)
+	    pam_syslog (pamh, LOG_DEBUG, "rhost(PAM_XDISPLAY)=%s", rhost);
+	}
+    }
   else
-    rhost = void_str;
-
-  if (ctrl & LASTLOG2_DEBUG)
-    pam_syslog (pamh, LOG_DEBUG, "rhost=%s", rhost);
+    {
+      rhost = void_str;
+      if (ctrl & LASTLOG2_DEBUG)
+	pam_syslog (pamh, LOG_DEBUG, "rhost(PAM_RHOST)=%s", rhost);
+    }
 
   if (time (&ll_time) < 0)
     return PAM_SYSTEM_ERR;
