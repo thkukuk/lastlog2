@@ -55,6 +55,43 @@ skip_prefix (const char *str, const char *prefix)
   return strncmp(str, prefix, prefix_len) ? NULL : str + prefix_len;
 }
 
+/* check for list match. */
+static int
+check_in_list (const char *service, const char *arg)
+{
+  const char *item;
+  const char *remaining;
+
+  if (!service)
+    return 0;
+
+  remaining = arg;
+
+  for (;;) {
+    item = strstr (remaining, service);
+    if (item == NULL)
+      break;
+
+    /* is it really the start of an item in the list? */
+    if (item == arg || *(item - 1) == ',') {
+      item += strlen (service);
+      /* is item really the service? */
+      if (*item == '\0' || *item == ',')
+	return 1;
+    }
+
+    remaining = strchr (item, ',');
+    if (remaining == NULL)
+      break;
+
+    /* skip ',' */
+    ++remaining;
+  }
+
+  return 0;
+}
+
+
 static int
 _pam_parse_args (pam_handle_t *pamh,
 		 int flags, int argc,
@@ -67,6 +104,14 @@ _pam_parse_args (pam_handle_t *pamh,
   if (flags & PAM_SILENT)
     ctrl |= LASTLOG2_QUIET;
 
+  const void *void_str = NULL;
+  const char *service;
+  if ((pam_get_item (pamh, PAM_SERVICE, &void_str) != PAM_SUCCESS) ||
+      void_str == NULL)
+    service = "";
+  else
+    service = void_str;
+
   /* step through arguments */
   for (; argc-- > 0; ++argv)
     {
@@ -74,8 +119,17 @@ _pam_parse_args (pam_handle_t *pamh,
 	ctrl |= LASTLOG2_DEBUG;
       else if (strcmp (*argv, "silent") == 0)
 	ctrl |= LASTLOG2_QUIET;
-      else if ((str = skip_prefix(*argv, "database=")) != NULL)
+      else if ((str = skip_prefix (*argv, "database=")) != NULL)
 	lastlog2_path = str;
+      else if ((str = skip_prefix (*argv, "silent_if=")) != NULL)
+	{
+	  if (check_in_list (service, str))
+	    {
+	      if (ctrl & LASTLOG2_DEBUG)
+		pam_syslog (pamh, LOG_DEBUG, "silent_if='%s' contains '%s'", str, service);
+	      ctrl |= LASTLOG2_QUIET;
+	    }
+	}
       else
 	pam_syslog (pamh, LOG_ERR, "Unknown option: %s", *argv);
     }
