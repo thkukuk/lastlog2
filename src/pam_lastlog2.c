@@ -143,6 +143,9 @@ write_login_data (pam_handle_t *pamh, int ctrl, const char *user)
   const void *void_str;
   const char *tty;
   const char *rhost;
+  const char *xdg_vtnr;
+  int xdg_vtnr_nr;
+  char tty_buf[8];
   time_t ll_time;
   char *error = NULL;
   int retval;
@@ -161,6 +164,18 @@ write_login_data (pam_handle_t *pamh, int ctrl, const char *user)
 
   if (ctrl & LASTLOG2_DEBUG)
     pam_syslog (pamh, LOG_DEBUG, "tty=%s", tty);
+
+  /* if PAM_TTY is not set or an X11 $DISPLAY, try XDG_VTNR */
+  if ((tty[0] == '\0' || strchr(tty, ':') != NULL) && (xdg_vtnr = pam_getenv (pamh, "XDG_VTNR")) != NULL)
+    {
+      xdg_vtnr_nr = atoi (xdg_vtnr);
+      if (xdg_vtnr_nr > 0 && snprintf (tty_buf, sizeof(tty_buf), "tty%d", xdg_vtnr_nr) < (int) sizeof(tty_buf))
+        {
+          tty = tty_buf;
+          if (ctrl & LASTLOG2_DEBUG)
+            pam_syslog (pamh, LOG_DEBUG, "tty(XDG_VTNR)=%s", tty);
+        }
+    }
 
   void_str = NULL;
   retval = pam_get_item (pamh, PAM_RHOST, &void_str);
