@@ -78,10 +78,10 @@ print_entry (const char *user, time_t ll_time,
 
   if (!once)
     {
-      printf ("Username         Port     From%*sLatest\n", maxIPv6Addrlen-3, " ");
+      printf ("Username         Port     From%*s Latest\n", maxIPv6Addrlen-4, " ");
       once = 1;
     }
-  printf ("%-16s %-8.8s %*s%s\n", user, tty ? tty : "",
+  printf ("%-16s %-8.8s %*s %s\n", user, tty ? tty : "",
 	  -maxIPv6Addrlen, rhost ? rhost : "", datep);
 
   return 0;
