@@ -39,14 +39,15 @@
 
 static int
 test_args (const char *db_path, const char *user, int64_t ll_time,
-	   const char *tty, const char *rhost)
+	   const char *tty, const char *rhost, const char *service)
 {
   char *error = NULL;
   int64_t res_time;
   char *res_tty = NULL;
   char *res_rhost = NULL;
+  char *res_service = NULL;
 
-  if (ll2_write_entry (db_path, user, ll_time, tty, rhost, &error) != 0)
+  if (ll2_write_entry (db_path, user, ll_time, tty, rhost, service, &error) != 0)
     {
       if (error)
         {
@@ -58,7 +59,7 @@ test_args (const char *db_path, const char *user, int64_t ll_time,
       return 1;
     }
 
-  if (ll2_read_entry (db_path, user, &res_time, &res_tty, &res_rhost, &error) != 0)
+  if (ll2_read_entry (db_path, user, &res_time, &res_tty, &res_rhost, &res_service, &error) != 0)
     {
       if (error)
         {
@@ -93,11 +94,21 @@ test_args (const char *db_path, const char *user, int64_t ll_time,
       return 1;
     }
 
+  if ((service == NULL && res_service != NULL) ||
+      (service != NULL && res_service == NULL) ||
+      (service != NULL && res_service != NULL && strcmp (service, res_service) != 0))
+    {
+      fprintf (stderr, "Wrong service: got %s, expect %s\n", service, res_service);
+      return 1;
+    }
+
+
   if (res_tty)
     free (res_tty);
-
   if (res_rhost)
     free (res_rhost);
+  if (res_service)
+    free (res_service);
 
   return 0;
 }
@@ -107,15 +118,15 @@ main(void)
 {
   const char *db_path = "tst-write-read-user.db";
 
-  if (test_args (db_path, "user1", time (NULL), "test-tty", "localhost") != 0)
+  if (test_args (db_path, "user1", time (NULL), "test-tty", "localhost", "test") != 0)
     return 1;
-  if (test_args (db_path, "user2", 0, NULL, NULL) != 0)
+  if (test_args (db_path, "user2", 0, NULL, NULL, NULL) != 0)
     return 1;
-  if (test_args (db_path, "user3", time (NULL), NULL, NULL) != 0)
+  if (test_args (db_path, "user3", time (NULL), NULL, NULL, NULL) != 0)
     return 1;
-  if (test_args (db_path, "user4", time (NULL), "test-tty", NULL) != 0)
+  if (test_args (db_path, "user4", time (NULL), "test-tty", NULL, NULL) != 0)
     return 1;
-  if (test_args (db_path, "user5", time (NULL), NULL, "localhost") != 0)
+  if (test_args (db_path, "user5", time (NULL), NULL, "localhost", NULL) != 0)
     return 1;
 
   return 0;

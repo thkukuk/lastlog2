@@ -49,7 +49,8 @@ main(void)
 
   printf ("Big time value is: %lld\n", (long long int)BIG_TIME_VALUE);
 
-  if (ll2_write_entry (db_path, user, BIG_TIME_VALUE, NULL, NULL, &error) != 0)
+  if (ll2_write_entry (db_path, user, BIG_TIME_VALUE, NULL, NULL,
+		       NULL, &error) != 0)
     {
       if (error)
         {
@@ -61,7 +62,8 @@ main(void)
       return 1;
     }
 
-  if (ll2_read_entry (db_path, user, &ll_time, NULL, NULL, &error) != 0)
+  if (ll2_read_entry (db_path, user, &ll_time, NULL, NULL, NULL,
+		      &error) != 0)
     {
       if (error)
         {

@@ -45,7 +45,8 @@ static time_t t_days = 0;
 
 static int
 print_entry (const char *user, time_t ll_time,
-	     const char *tty, const char *rhost)
+	     const char *tty, const char *rhost,
+	     const char *pam_service __attribute__((__unused__)))
 {
   static int once = 0;
   char *datep;
@@ -323,6 +324,7 @@ main (int argc, char **argv)
       time_t ll_time = 0;
       char *tty = NULL;
       char *rhost = NULL;
+      char *service = NULL;
 
       if (check_user (user) != 0)
 	{
@@ -331,9 +333,10 @@ main (int argc, char **argv)
 	}
 
       /* We ignore errors, if the user is not in the database he did never login */
-      ll2_read_entry (lastlog2_path, user, &ll_time, &tty, &rhost, NULL);
+      ll2_read_entry (lastlog2_path, user, &ll_time, &tty, &rhost,
+		      &service, NULL);
 
-      print_entry(user, ll_time, tty, rhost);
+      print_entry(user, ll_time, tty, rhost, service);
 
       exit (EXIT_SUCCESS);
     }

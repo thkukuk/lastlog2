@@ -79,11 +79,12 @@ open_database_rw (const char *path, char **error)
    Returns 0 on success, -1 on failure. */
 static int
 read_entry (sqlite3 *db, const char *user,
-	    int64_t *ll_time, char **tty, char **rhost, char **error)
+	    int64_t *ll_time, char **tty, char **rhost,
+	    char **pam_service, char **error)
 {
   int retval = 0;
   sqlite3_stmt *res;
-  char *sql = "SELECT * FROM Lastlog WHERE Name = ?";
+  char *sql = "SELECT * FROM Lastlog2 WHERE Name = ?";
 
   if (sqlite3_prepare_v2 (db, sql, -1, &res, 0) != SQLITE_OK)
     {
@@ -138,6 +139,12 @@ read_entry (sqlite3 *db, const char *user,
 	  if (uc != NULL && strlen ((const char *)uc) > 0)
 	    *rhost = strdup ((const char *)uc);
 	}
+      if (pam_service)
+	{
+	  uc = sqlite3_column_text (res, 4);
+	  if (uc != NULL && strlen ((const char *)uc) > 0)
+	    *pam_service = strdup ((const char *)uc);
+	}
     }
   else
     {
@@ -156,7 +163,8 @@ read_entry (sqlite3 *db, const char *user,
 /* reads 1 entry from database and returns that. Returns 0 on success, -1 on failure. */
 int
 ll2_read_entry (const char *lastlog2_path, const char *user,
-		int64_t *ll_time, char **tty, char **rhost, char **error)
+		int64_t *ll_time, char **tty, char **rhost,
+		char **pam_service, char **error)
 {
   sqlite3 *db;
   int retval;
@@ -164,7 +172,7 @@ ll2_read_entry (const char *lastlog2_path, const char *user,
   if ((db = open_database_ro (lastlog2_path, error)) == NULL)
     return -1;
 
-  retval = read_entry (db, user, ll_time, tty, rhost, error);
+  retval = read_entry (db, user, ll_time, tty, rhost, pam_service, error);
 
   sqlite3_close (db);
 
@@ -175,12 +183,12 @@ ll2_read_entry (const char *lastlog2_path, const char *user,
 static int
 write_entry (sqlite3 *db, const char *user,
 	     int64_t ll_time, const char *tty, const char *rhost,
-		 char **error)
+	     const char *pam_service, char **error)
 {
   char *err_msg = NULL;
   sqlite3_stmt *res;
-  char *sql_table = "CREATE TABLE IF NOT EXISTS Lastlog(Name TEXT PRIMARY KEY, Time INTEGER, TTY TEXT, RemoteHost TEXT) STRICT;";
-  char *sql_replace = "REPLACE INTO Lastlog VALUES(?,?,?,?);";
+  char *sql_table = "CREATE TABLE IF NOT EXISTS Lastlog2(Name TEXT PRIMARY KEY, Time INTEGER, TTY TEXT, RemoteHost TEXT, Service TEXT) STRICT;";
+  char *sql_replace = "REPLACE INTO Lastlog2 VALUES(?,?,?,?,?);";
 
   if (sqlite3_exec (db, sql_table, 0, 0, &err_msg) != SQLITE_OK)
     {
@@ -246,6 +254,17 @@ write_entry (sqlite3 *db, const char *user,
       return -1;
     }
 
+  if (sqlite3_bind_text (res, 5, pam_service, -1, SQLITE_STATIC) != SQLITE_OK)
+    {
+      if (error)
+        if (asprintf (error, "Failed to create replace statement for PAM service: %s",
+                      sqlite3_errmsg (db)) < 0)
+          *error = strdup("Out of memory");
+
+      sqlite3_finalize(res);
+      return -1;
+    }
+
   int step = sqlite3_step (res);
 
   if (step != SQLITE_DONE)
@@ -268,7 +287,7 @@ write_entry (sqlite3 *db, const char *user,
 int
 ll2_write_entry (const char *lastlog2_path, const char *user,
 		 int64_t ll_time, const char *tty, const char *rhost,
-		 char **error)
+		 const char *pam_service, char **error)
 {
   sqlite3 *db;
   int retval;
@@ -276,14 +295,15 @@ ll2_write_entry (const char *lastlog2_path, const char *user,
   if ((db = open_database_rw (lastlog2_path, error)) == NULL)
     return -1;
 
-  retval = write_entry (db, user, ll_time, tty, rhost, error);
+  retval = write_entry (db, user, ll_time, tty, rhost, pam_service, error);
 
   sqlite3_close (db);
 
   return retval;
 }
 
-/* Write a new entry. Returns 0 on success, -1 on failure. */
+/* Write a new entry with updated login time.
+   Returns 0 on success, -1 on failure. */
 int
 ll2_update_login_time (const char *lastlog2_path, const char *user,
 		       int64_t ll_time, char **error)
@@ -292,17 +312,18 @@ ll2_update_login_time (const char *lastlog2_path, const char *user,
   int retval;
   char *tty;
   char *rhost;
+  char *pam_service;
 
   if ((db = open_database_rw (lastlog2_path, error)) == NULL)
     return -1;
 
-  if (read_entry (db, user, 0, &tty, &rhost, error) != 0)
+  if (read_entry (db, user, 0, &tty, &rhost, &pam_service, error) != 0)
     {
       sqlite3_close (db);
       return -1;
     }
 
-  retval = write_entry (db, user, ll_time, tty, rhost, error);
+  retval = write_entry (db, user, ll_time, tty, rhost, pam_service, error);
 
   sqlite3_close (db);
 
@@ -310,13 +331,16 @@ ll2_update_login_time (const char *lastlog2_path, const char *user,
     free (tty);
   if (rhost)
     free (rhost);
+  if (pam_service)
+    free (pam_service);
 
   return retval;
 }
 
 
 typedef int (*callback_f)(const char *user, int64_t ll_time,
-			  const char *tty, const char *rhost);
+			  const char *tty, const char *rhost,
+			  const char *pam_service);
 
 static int
 callback (void *cb_func, int argc, char **argv, char **azColName)
@@ -324,7 +348,7 @@ callback (void *cb_func, int argc, char **argv, char **azColName)
   char *endptr;
   callback_f print_entry = cb_func;
 
-  if (argc != 4)
+  if (argc != 5)
     {
       fprintf (stderr, "Mangled entry:");
       for (int i = 0; i < argc; i++)
@@ -339,7 +363,7 @@ callback (void *cb_func, int argc, char **argv, char **azColName)
       || (endptr == argv[1]) || (*endptr != '\0'))
     fprintf (stderr, "Invalid numeric time entry for '%s': '%s'\n", argv[0], argv[1]);
 
-  print_entry (argv[0], ll_time, argv[2], argv[3]);
+  print_entry (argv[0], ll_time, argv[2], argv[3], argv[4]);
 
   return 0;
 }
@@ -349,7 +373,8 @@ callback (void *cb_func, int argc, char **argv, char **azColName)
 int
 ll2_read_all  (const char *lastlog2_path,
 	       int (*cb_func)(const char *user, int64_t ll_time,
-			      const char *tty, const char *rhost),
+			      const char *tty, const char *rhost,
+			      const char *pam_service),
 	       char **error)
 {
   sqlite3 *db;
@@ -358,7 +383,7 @@ ll2_read_all  (const char *lastlog2_path,
   if ((db = open_database_ro (lastlog2_path, error)) == NULL)
     return -1;
 
-  char *sql = "SELECT * FROM Lastlog";
+  char *sql = "SELECT * FROM Lastlog2";
 
   if (sqlite3_exec (db, sql, callback, cb_func, &err_msg) != SQLITE_OK)
     {
@@ -381,7 +406,7 @@ static int
 remove_entry (sqlite3 *db, const char *user, char **error)
 {
   sqlite3_stmt *res;
-  char *sql = "DELETE FROM Lastlog WHERE Name = ?";
+  char *sql = "DELETE FROM Lastlog2 WHERE Name = ?";
 
   if (sqlite3_prepare_v2 (db, sql, -1, &res, 0) != SQLITE_OK)
     {
@@ -449,18 +474,19 @@ ll2_rename_user (const char *lastlog2_path, const char *user,
   time_t ll_time;
   char *tty;
   char *rhost;
+  char *pam_service;
   int retval;
 
   if ((db = open_database_rw (lastlog2_path, error)) == NULL)
     return -1;
 
-  if (read_entry (db, user, &ll_time, &tty, &rhost, error) != 0)
+  if (read_entry (db, user, &ll_time, &tty, &rhost, &pam_service, error) != 0)
     {
       sqlite3_close (db);
       return -1;
     }
 
-  if (write_entry (db, newname, ll_time, tty, rhost, error) != 0)
+  if (write_entry (db, newname, ll_time, tty, rhost, pam_service, error) != 0)
     {
       sqlite3_close (db);
       if (tty)
@@ -555,7 +581,7 @@ ll2_import_lastlog (const char *lastlog2_path, const char *lastlog_file,
 	      rhost[UT_HOSTSIZE] = '\0';
 
 	      if (write_entry (db, pw->pw_name, ll_time, tty,
-			       rhost, error) != 0)
+			       rhost, NULL, error) != 0)
 		{
 		  endpwent ();
 		  sqlite3_close (db);

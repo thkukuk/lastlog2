@@ -54,7 +54,7 @@ main(void)
   char *output = NULL;
 
   if (ll2_write_entry (db_path, user, login_time, "pts/0",
-		       "192.168.122.1", &error) != 0)
+		       "192.168.122.1", NULL, &error) != 0)
     {
       if (error)
         {
@@ -66,7 +66,8 @@ main(void)
       return 1;
     }
 
-  if (ll2_read_entry (db_path, user, &ll_time, &tty, &rhost, &error) != 0)
+  if (ll2_read_entry (db_path, user, &ll_time, &tty, &rhost,
+		      NULL, &error) != 0)
     {
       if (error)
         {

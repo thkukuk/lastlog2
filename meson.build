@@ -108,7 +108,7 @@ liblastlog2 = shared_library(
   link_depends : liblastlog2_map,
   dependencies : [libsqlite3],
   install : true,
-  soversion : '0'
+  soversion : '1'
 )
 install_headers('include/lastlog2.h')
 

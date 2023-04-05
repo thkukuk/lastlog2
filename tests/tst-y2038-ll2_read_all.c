@@ -44,10 +44,11 @@
 const char *user = "y2038";
 const char *tty = "pts/test";
 const char *rhost = NULL;
+const char *service = "sshd";
 
 static int
 check_y2038 (const char *res_user, time_t ll_time, const char *res_tty,
-	     const char *res_rhost)
+	     const char *res_rhost, const char *res_service)
 {
 
   if (strcmp (user, res_user) != 0)
@@ -78,6 +79,12 @@ check_y2038 (const char *res_user, time_t ll_time, const char *res_tty,
       exit (1);
     }
 
+  if (strcmp (service, res_service) != 0)
+    {
+      fprintf (stderr, "write/read entry service mismatch: written: %s, got: %s\n",
+	       service, res_service);
+      exit (1);
+    }
 
   return 0;
 }
@@ -92,7 +99,8 @@ main(void)
 
   printf ("Big time value is: %lld\n", (long long int)BIG_TIME_VALUE);
 
-  if (ll2_write_entry (db_path, user, BIG_TIME_VALUE, tty, rhost, &error) != 0)
+  if (ll2_write_entry (db_path, user, BIG_TIME_VALUE, tty, rhost, service,
+		       &error) != 0)
     {
       if (error)
         {

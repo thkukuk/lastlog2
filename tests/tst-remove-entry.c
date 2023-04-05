@@ -45,10 +45,11 @@ main(void)
   time_t ll_time = 0;
   char *tty = NULL;
   char *rhost = NULL;
+  char *service = NULL;
   char *error = NULL;
 
   if (ll2_write_entry (db_path, user, time (NULL), "test-tty",
-		       "localhost", &error) != 0)
+		       "localhost", "sshd", &error) != 0)
     {
       if (error)
         {
@@ -73,11 +74,11 @@ main(void)
     }
 
   /* this needs to fail, as the old entry shouldn't exist anymore. */
-  if (ll2_read_entry (db_path, user, &ll_time, &tty, &rhost, &error) == 0)
+  if (ll2_read_entry (db_path, user, &ll_time, &tty, &rhost, &service, &error) == 0)
     {
       fprintf (stderr, "Reading old user from database did not fail!\n");
-      fprintf (stderr, "ll_time=%lld, tty='%s', rhost='%s'\n",
-	       (long long int)ll_time, tty, rhost);
+      fprintf (stderr, "ll_time=%lld, tty='%s', rhost='%s', service='%s'\n",
+	       (long long int)ll_time, tty, rhost, service);
       return 1;
     }
 
@@ -87,6 +88,8 @@ main(void)
     free (tty);
   if (rhost)
     free (rhost);
+  if (service)
+    free (service);
 
   return 0;
 }

@@ -46,10 +46,11 @@ main(void)
   time_t ll_time = 0;
   char *tty = NULL;
   char *rhost = NULL;
+  char *service = NULL;
   char *error = NULL;
 
   if (ll2_write_entry (db_path, user, time (NULL), "test-tty",
-		       "localhost", &error) != 0)
+		       "localhost", "test-service", &error) != 0)
     {
       if (error)
         {
@@ -74,11 +75,12 @@ main(void)
     }
 
   /* this needs to fail, as the old entry shouldn't exist anymore. */
-  if (ll2_read_entry (db_path, user, &ll_time, &tty, &rhost, &error) == 0)
+  if (ll2_read_entry (db_path, user, &ll_time, &tty, &rhost,
+		      &service, &error) == 0)
     {
       fprintf (stderr, "Reading old user from database did not fail!\n");
-      fprintf (stderr, "ll_time=%lld, tty='%s', rhost='%s'\n",
-	       (long long int)ll_time, tty, rhost);
+      fprintf (stderr, "ll_time=%lld, tty='%s', rhost='%s', service='%s'\n",
+	       (long long int)ll_time, tty, rhost, service);
       return 1;
     }
 
@@ -88,7 +90,8 @@ main(void)
       error = NULL;
     }
 
-  if (ll2_read_entry (db_path, newname, &ll_time, &tty, &rhost, &error) != 0)
+  if (ll2_read_entry (db_path, newname, &ll_time, &tty, &rhost, &service,
+		      &error) != 0)
     {
       if (error)
         {
@@ -100,7 +103,8 @@ main(void)
       return 1;
     }
 
-  if (strcmp (tty, "test-tty") != 0 || strcmp (rhost, "localhost") != 0)
+  if (strcmp (tty, "test-tty") != 0 || strcmp (rhost, "localhost") != 0 ||
+      strcmp (service, "test-service") != 0)
     {
       fprintf (stderr, "New entry data does not match old entry data!\n");
     }
@@ -109,6 +113,8 @@ main(void)
     free (tty);
   if (rhost)
     free (rhost);
+  if (service)
+    free (service);
 
   return 0;
 }

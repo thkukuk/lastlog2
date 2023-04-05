@@ -104,14 +104,6 @@ _pam_parse_args (pam_handle_t *pamh,
   if (flags & PAM_SILENT)
     ctrl |= LASTLOG2_QUIET;
 
-  const void *void_str = NULL;
-  const char *service;
-  if ((pam_get_item (pamh, PAM_SERVICE, &void_str) != PAM_SUCCESS) ||
-      void_str == NULL)
-    service = "";
-  else
-    service = void_str;
-
   /* step through arguments */
   for (; argc-- > 0; ++argv)
     {
@@ -123,6 +115,14 @@ _pam_parse_args (pam_handle_t *pamh,
 	lastlog2_path = str;
       else if ((str = skip_prefix (*argv, "silent_if=")) != NULL)
 	{
+	  const void *void_str = NULL;
+	  const char *service;
+	  if ((pam_get_item (pamh, PAM_SERVICE, &void_str) != PAM_SUCCESS) ||
+	      void_str == NULL)
+	    service = "";
+	  else
+	    service = void_str;
+
 	  if (check_in_list (service, str))
 	    {
 	      if (ctrl & LASTLOG2_DEBUG)
@@ -143,6 +143,7 @@ write_login_data (pam_handle_t *pamh, int ctrl, const char *user)
   const void *void_str;
   const char *tty;
   const char *rhost;
+  const char *pam_service;
   const char *xdg_vtnr;
   int xdg_vtnr_nr;
   char tty_buf[8];
@@ -199,10 +200,18 @@ write_login_data (pam_handle_t *pamh, int ctrl, const char *user)
 	pam_syslog (pamh, LOG_DEBUG, "rhost(PAM_RHOST)=%s", rhost);
     }
 
+  void_str = NULL;
+  if ((pam_get_item (pamh, PAM_SERVICE, &void_str) != PAM_SUCCESS) ||
+      void_str == NULL)
+    pam_service = "";
+  else
+    pam_service = void_str;
+
   if (time (&ll_time) < 0)
     return PAM_SYSTEM_ERR;
 
-  if (ll2_write_entry (lastlog2_path, user, ll_time, tty, rhost, &error) != 0)
+  if (ll2_write_entry (lastlog2_path, user, ll_time, tty, rhost,
+		       pam_service, &error) != 0)
     {
       if (error)
 	{
@@ -223,6 +232,7 @@ show_lastlogin (pam_handle_t *pamh, int ctrl, const char *user)
   time_t ll_time = 0;
   char *tty = NULL;
   char *rhost = NULL;
+  char *service = NULL;
   char *date = NULL;
   char the_time[256];
   char *error = NULL;
@@ -231,7 +241,8 @@ show_lastlogin (pam_handle_t *pamh, int ctrl, const char *user)
   if (ctrl & LASTLOG2_QUIET)
     return PAM_SUCCESS;
 
-  if (ll2_read_entry (lastlog2_path, user, &ll_time, &tty, &rhost, &error) != 0)
+  if (ll2_read_entry (lastlog2_path, user, &ll_time, &tty, &rhost,
+		      &service, &error) != 0)
     {
       if (error)
 	{
@@ -263,6 +274,7 @@ show_lastlogin (pam_handle_t *pamh, int ctrl, const char *user)
 		      tty ? " on " : "",
 		      tty ? tty : "");
 
+  _pam_drop(service);
   _pam_drop(rhost);
   _pam_drop(tty);
 

@@ -1,4 +1,4 @@
-LIBLASTLOG2_0.5 {
+LIBLASTLOG2_1.0 {
   global:
         ll2_read_all;
 	ll2_read_entry;
