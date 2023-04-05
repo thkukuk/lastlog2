@@ -1,3 +1,11 @@
+Version 1.0.1
+* liblastlog2: fix memory leak
+
+Version 1.0.0
+* Add PAM service name to database
+* pam_lastlog2: Try XDG_VTNR if PAM_TTY is not a tty
+* lastlog2: Fix header alignment
+
 Version 0.7.0
 * pam_lastlog2: add silent_if= option
 * pam_lastlog2: try PAM_XDISPLAY if PAM_RHOST is not set
