@@ -504,6 +504,8 @@ ll2_rename_user (const char *lastlog2_path, const char *user,
     free (tty);
   if (rhost)
     free (rhost);
+  if (pam_service)
+    free (pam_service);
 
   return retval;
 }
