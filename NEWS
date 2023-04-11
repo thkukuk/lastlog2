@@ -1,3 +1,8 @@
+Version 1.1.0
+* Add option to install lastlog compat symlink
+* lastlog2: add --service option
+* liblastlog2: sort output according to user names
+
 Version 1.0.1
 * liblastlog2: fix memory leak
 
