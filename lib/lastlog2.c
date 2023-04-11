@@ -383,7 +383,7 @@ ll2_read_all  (const char *lastlog2_path,
   if ((db = open_database_ro (lastlog2_path, error)) == NULL)
     return -1;
 
-  char *sql = "SELECT * FROM Lastlog2";
+  char *sql = "SELECT * FROM Lastlog2 ORDER BY Name ASC";
 
   if (sqlite3_exec (db, sql, callback, cb_func, &err_msg) != SQLITE_OK)
     {
