@@ -140,6 +140,12 @@ executable('lastlog2',
            link_with : liblastlog2,
            install : true)
 
+if get_option('compat-symlink')
+  install_symlink('lastlog',
+                  pointing_to: 'lastlog2',
+                  install_dir: 'bin')
+endif
+
 subdir('tmpfiles.d')
 subdir('units')
 
