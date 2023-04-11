@@ -42,11 +42,12 @@ static int bflg = 0;
 static time_t b_days = 0;
 static int tflg = 0;
 static time_t t_days = 0;
+static int sflg = 0;
 
 static int
 print_entry (const char *user, time_t ll_time,
 	     const char *tty, const char *rhost,
-	     const char *pam_service __attribute__((__unused__)))
+	     const char *pam_service)
 {
   static int once = 0;
   char *datep;
@@ -79,11 +80,14 @@ print_entry (const char *user, time_t ll_time,
 
   if (!once)
     {
-      printf ("Username         Port     From%*s Latest\n", maxIPv6Addrlen-4, " ");
+      printf ("Username         Port     From%*s Latest%*s%s\n",
+	      maxIPv6Addrlen-4, " ",
+	      sflg?(int)strlen (datep)-5:0, " ", sflg?"Service":"");
       once = 1;
     }
-  printf ("%-16s %-8.8s %*s %s\n", user, tty ? tty : "",
-	  -maxIPv6Addrlen, rhost ? rhost : "", datep);
+  printf ("%-16s %-8.8s %*s %s%*s%s\n", user, tty ? tty : "",
+	  -maxIPv6Addrlen, rhost ? rhost : "", datep,
+	  sflg?31-(int)strlen(datep):0, " ", sflg?(pam_service?pam_service:""):"");
 
   return 0;
 }
@@ -101,6 +105,7 @@ usage (int retval)
   fputs ("  -h, --help            Display this help message and exit\n", output);
   fputs ("  -i, --import FILE     Import data from old lastlog file\n", output);
   fputs ("  -r, --rename NEWNAME  Rename existing user to NEWNAME (requires -u)\n", output);
+  fputs ("  -s, --service SERVICE Display PAM service\n", output);
   fputs ("  -S, --set             Set lastlog record to current time (requires -u)\n", output);
   fputs ("  -t, --time DAYS       Print only lastlog records more recent than DAYS\n", output);
   fputs ("  -u, --user LOGIN      Print lastlog record of the specified LOGIN\n", output);
@@ -129,6 +134,7 @@ main (int argc, char **argv)
     {"help",     no_argument,       NULL, 'h'},
     {"import",   required_argument, NULL, 'i'},
     {"rename",   required_argument, NULL, 'r'},
+    {"service",  no_argument,       NULL, 's'},
     {"set",      no_argument,       NULL, 'S'},
     {"time",     required_argument, NULL, 't'},
     {"user",     required_argument, NULL, 'u'},
@@ -146,7 +152,7 @@ main (int argc, char **argv)
   const char *lastlog_file = NULL;
   int c;
 
-  while ((c = getopt_long (argc, argv, "b:Cd:hi:r:St:u:v", longopts, NULL)) != -1)
+  while ((c = getopt_long (argc, argv, "b:Cd:hi:r:sSt:u:v", longopts, NULL)) != -1)
     {
       switch (c)
 	{
@@ -183,6 +189,9 @@ main (int argc, char **argv)
 	case 'r':
 	  rflg = 1;
 	  newname = optarg;
+	  break;
+	case 's':
+	  sflg = 1;
 	  break;
 	case 'S':
 	  /* Set lastlog record of a user to the current time. */
