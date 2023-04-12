@@ -105,7 +105,7 @@ usage (int retval)
   fputs ("  -h, --help            Display this help message and exit\n", output);
   fputs ("  -i, --import FILE     Import data from old lastlog file\n", output);
   fputs ("  -r, --rename NEWNAME  Rename existing user to NEWNAME (requires -u)\n", output);
-  fputs ("  -s, --service SERVICE Display PAM service\n", output);
+  fputs ("  -s, --service         Display PAM service\n", output);
   fputs ("  -S, --set             Set lastlog record to current time (requires -u)\n", output);
   fputs ("  -t, --time DAYS       Print only lastlog records more recent than DAYS\n", output);
   fputs ("  -u, --user LOGIN      Print lastlog record of the specified LOGIN\n", output);

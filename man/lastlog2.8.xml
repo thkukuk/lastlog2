@@ -109,6 +109,16 @@
       </varlistentry>
       <varlistentry>
         <term>
+          <option>-s, --service</option>
+        </term>
+        <listitem>
+          <para>
+            Display PAM service used to login in the last column.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
           <option>-S, --set</option>
         </term>
         <listitem>
