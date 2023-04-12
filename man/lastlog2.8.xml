@@ -151,6 +151,16 @@
           </para>
         </listitem>
       </varlistentry>
+      <varlistentry>
+        <term>
+          <option>-v, --version</option>
+        </term>
+        <listitem>
+          <para>
+            Print version number and exit.
+          </para>
+        </listitem>
+      </varlistentry>
     </variablelist>
     <para>
       If the user has never logged in the message
