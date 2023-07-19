@@ -26,7 +26,6 @@ add_project_arguments(['-D_GNU_SOURCE=1',
                        '-DPROJECT_VERSION="@0@"'.format(meson.project_version()) ], language : 'c')
 
 possible_cc_flags = [
-                  '-flto=auto',
                   '-ffat-lto-objects',
 		  '-fstack-protector-strong',
 		  '-funwind-tables',
