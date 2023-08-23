@@ -239,7 +239,10 @@ show_lastlogin (pam_handle_t *pamh, int ctrl, const char *user)
   int retval = PAM_SUCCESS;
 
   if (ctrl & LASTLOG2_QUIET)
-    return PAM_SUCCESS;
+    return retval;
+
+  if (ll2_check_database (lastlog2_path) != 0)
+    return retval;
 
   if (ll2_read_entry (lastlog2_path, user, &ll_time, &tty, &rhost,
 		      &service, &error) != 0)

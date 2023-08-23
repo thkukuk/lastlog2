@@ -31,6 +31,9 @@
 
 #include <stdint.h>
 
+/* Check if database file exists.
+   Returns 0 on success, -1 on failure. */
+extern int ll2_check_database (const char *lastlog2_path);
 /* Write a new entry. Returns 0 on success, -1 on failure. */
 extern int ll2_write_entry (const char *lastlog2_path, const char *user,
 			    int64_t ll_time, const char *tty,

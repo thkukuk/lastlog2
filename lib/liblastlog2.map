@@ -9,3 +9,8 @@ LIBLASTLOG2_1.0 {
         ll2_import_lastlog;
   local: *;
 };
+
+LIBLASTLOG2_1.2 {
+  global:
+        ll2_check_database;
+} LIBLASTLOG2_1.0;

@@ -75,6 +75,14 @@ open_database_rw (const char *path, char **error)
   return db;
 }
 
+/* Check if database file exists.
+   Returns 0 on success, -1 on failure. */
+int ll2_check_database (const char *lastlog2_path)
+{
+    struct stat st;
+    return stat(lastlog2_path, &st);
+}
+
 /* Reads one entry from database and returns that.
    Returns 0 on success, -1 on failure. */
 static int
