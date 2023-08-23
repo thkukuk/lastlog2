@@ -66,6 +66,12 @@ main(void)
       return 1;
     }
 
+  if (ll2_check_database (db_path) != 0)
+    {
+      fprintf(stderr, "ll2_check_database failed");
+      return 1;
+    }
+
   if (ll2_read_entry (db_path, user, &ll_time, &tty, &rhost,
 		      NULL, &error) != 0)
     {
