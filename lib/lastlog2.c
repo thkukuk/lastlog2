@@ -479,7 +479,7 @@ ll2_rename_user (const char *lastlog2_path, const char *user,
 		 const char *newname, char **error)
 {
   sqlite3 *db;
-  time_t ll_time;
+  int64_t ll_time;
   char *tty;
   char *rhost;
   char *pam_service;
@@ -580,7 +580,7 @@ ll2_import_lastlog (const char *lastlog2_path, const char *lastlog_file,
 
 	  if (ll.ll_time != 0)
 	    {
-	      time_t ll_time;
+	      int64_t ll_time;
 	      char tty[UT_LINESIZE+1];
 	      char rhost[UT_HOSTSIZE+1];
 
