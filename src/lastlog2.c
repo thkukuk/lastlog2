@@ -45,7 +45,7 @@ static time_t t_days = 0;
 static int sflg = 0;
 
 static int
-print_entry (const char *user, time_t ll_time,
+print_entry (const char *user, int64_t ll_time,
 	     const char *tty, const char *rhost,
 	     const char *pam_service)
 {
@@ -66,7 +66,10 @@ print_entry (const char *user, time_t ll_time,
   if (tflg && ((time (NULL) - ll_time) > t_days))
     return 0;
 
-  tm = localtime (&ll_time);
+  /* this is necessary if you compile this on architectures with
+     a 32bit time_t type. */
+  time_t t_time = ll_time;
+  tm = localtime (&t_time);
   if (tm == NULL)
     datep = "(unknown)";
   else
@@ -75,7 +78,7 @@ print_entry (const char *user, time_t ll_time,
       datep = datetime;
     }
 
-  if (ll_time == (time_t) 0)
+  if (ll_time == 0)
     datep = "**Never logged in**";
 
   if (!once)
@@ -330,7 +333,7 @@ main (int argc, char **argv)
 
   if (user)
     {
-      time_t ll_time = 0;
+      int64_t ll_time = 0;
       char *tty = NULL;
       char *rhost = NULL;
       char *service = NULL;
