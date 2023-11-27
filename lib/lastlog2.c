@@ -362,7 +362,7 @@ callback (void *cb_func, int argc, char **argv, char **azColName)
       for (int i = 0; i < argc; i++)
 	fprintf (stderr, " %s=%s", azColName[i], argv[i] ? argv[i] : "NULL");
       fprintf (stderr, "\n");
-      exit (EXIT_FAILURE);
+      return 0;
     }
 
   errno = 0;
