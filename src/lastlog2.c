@@ -87,7 +87,8 @@ print_entry (const char *user, time_t ll_time,
     }
   printf ("%-16s %-8.8s %*s %s%*s%s\n", user, tty ? tty : "",
 	  -maxIPv6Addrlen, rhost ? rhost : "", datep,
-	  sflg?31-(int)strlen(datep):0, " ", sflg?(pam_service?pam_service:""):"");
+	  sflg?31-(int)strlen(datep):0, (sflg&&pam_service)?" ":"",
+	  sflg?(pam_service?pam_service:""):"");
 
   return 0;
 }
@@ -350,18 +351,38 @@ main (int argc, char **argv)
       exit (EXIT_SUCCESS);
     }
 
-  if (ll2_read_all (lastlog2_path, print_entry, &error) != 0)
+  const struct passwd *pwent;
+  setpwent();
+  while ((pwent = getpwent ()) != NULL)
     {
-      if (error)
-	{
-	  fprintf (stderr, "%s\n", error);
-	  free (error);
-	}
-      else
-	fprintf (stderr, "Couldn't read entries for all users\n");
+      time_t ll_time = 0;
+      char *tty = NULL;
+      char *rhost = NULL;
+      char *service = NULL;
 
-      exit (EXIT_FAILURE);
+      int ret = ll2_read_entry (lastlog2_path, pwent->pw_name, &ll_time, &tty,
+				&rhost, &service, &error);
+
+      /* If user is not found, user has not logged in so it can be ignored */
+      if (ret == -2 && error)
+	free(error);
+      else if (ret == -1)
+	{
+	  if (error)
+	    {
+	      fprintf (stderr, "%s\n", error);
+	      free (error);
+	    }
+	  else
+	    fprintf (stderr, "Couldn't read entries for all users\n");
+
+	  endpwent();
+	  exit (EXIT_FAILURE);
+	}
+
+      print_entry(pwent->pw_name, ll_time, tty, rhost, service);
     }
+  endpwent();
 
   exit (EXIT_SUCCESS);
 }

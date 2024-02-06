@@ -84,7 +84,7 @@ int ll2_check_database (const char *lastlog2_path)
 }
 
 /* Reads one entry from database and returns that.
-   Returns 0 on success, -1 on failure. */
+   Returns 0 on success, -1 on failure, -2 on user not found. */
 static int
 read_entry (sqlite3 *db, const char *user,
 	    int64_t *ll_time, char **tty, char **rhost,
@@ -160,7 +160,7 @@ read_entry (sqlite3 *db, const char *user,
 	if (asprintf (error, "User '%s' not found (%d)", user, step) < 0)
 	  *error = strdup("Out of memory");
 
-      retval = -1;
+      retval = -2;
     }
 
   sqlite3_finalize (res);
@@ -168,7 +168,8 @@ read_entry (sqlite3 *db, const char *user,
   return retval;
 }
 
-/* reads 1 entry from database and returns that. Returns 0 on success, -1 on failure. */
+/* reads 1 entry from database and returns that.
+   Returns 0 on success, -1 on failure, -2 on user not found. */
 int
 ll2_read_entry (const char *lastlog2_path, const char *user,
 		int64_t *ll_time, char **tty, char **rhost,
