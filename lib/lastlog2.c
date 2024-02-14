@@ -154,11 +154,22 @@ read_entry (sqlite3 *db, const char *user,
 	    *pam_service = strdup ((const char *)uc);
 	}
     }
-  else
+  else if (step == SQLITE_DONE)
+    {
+      retval = -ENOENT;
+    }
+  else if (step == SQLITE_BUSY)
     {
       if (error)
-	if (asprintf (error, "User '%s' not found (%d)", user, step) < 0)
-	  *error = strdup("Out of memory");
+	  *error = strdup ("Database busy");
+
+      retval = -1;
+    }
+  else if (step == SQLITE_ERROR)
+    {
+      if (error)
+	if (asprintf (error, "Error stepping through database: %s", sqlite3_errmsg (db)) < 0)
+	  *error = strdup ("Out of memory");
 
       retval = -1;
     }
@@ -277,10 +288,20 @@ write_entry (sqlite3 *db, const char *user,
 
   if (step != SQLITE_DONE)
     {
-      if (error)
-        if (asprintf (error, "Delete statement did not return SQLITE_DONE: %d",
-                      step) < 0)
-          *error = strdup("Out of memory");
+      if (step == SQLITE_ERROR)
+	{
+	  if (error)
+	    if (asprintf (error, "Delete statement failed: %s",
+			  sqlite3_errmsg (db)) < 0)
+	      *error = strdup("Out of memory");
+	}
+      else
+	{
+	  if (error)
+	    if (asprintf (error, "Delete statement did not return SQLITE_DONE: %d",
+			  step) < 0)
+	      *error = strdup("Out of memory");
+	}
 
       sqlite3_finalize(res);
       return -1;
@@ -441,11 +462,20 @@ remove_entry (sqlite3 *db, const char *user, char **error)
 
   if (step != SQLITE_DONE)
     {
-      if (error)
-        if (asprintf (error, "Delete statement did not return SQLITE_DONE: %d",
-                      step) < 0)
-          *error = strdup("Out of memory");
-
+      if (step == SQLITE_ERROR)
+	{
+	  if (error)
+	    if (asprintf (error, "Delete statement failed: %s",
+			  sqlite3_errmsg (db)) < 0)
+	      *error = strdup("Out of memory");
+	}
+      else
+	{
+	  if (error)
+	    if (asprintf (error, "Delete statement did not return SQLITE_DONE: %d",
+			  step) < 0)
+	      *error = strdup("Out of memory");
+	}
       sqlite3_finalize(res);
       return -1;
     }
