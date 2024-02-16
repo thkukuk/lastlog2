@@ -26,6 +26,7 @@
 */
 
 #include <time.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -244,17 +245,22 @@ show_lastlogin (pam_handle_t *pamh, int ctrl, const char *user)
   if (ll2_check_database (lastlog2_path) != 0)
     return retval;
 
-  if (ll2_read_entry (lastlog2_path, user, &ll_time, &tty, &rhost,
-		      &service, &error) != 0)
+  int ret = ll2_read_entry (lastlog2_path, user, &ll_time, &tty, &rhost,
+			    &service, &error);
+  if (ret < 0)
     {
       if (error)
 	{
 	  pam_syslog (pamh, LOG_ERR, "%s", error);
 	  free (error);
+	  retval = PAM_SYSTEM_ERR;
 	}
-      else
-	pam_syslog (pamh, LOG_ERR, "Unknown error reading database %s", lastlog2_path);
-      return PAM_SYSTEM_ERR;
+      else if (ret != -ENOENT)
+	{
+	  pam_syslog (pamh, LOG_ERR, "Unknown error reading database %s", lastlog2_path);
+	  retval = PAM_SYSTEM_ERR;
+	}
+      return retval;
     }
 
   if (ll_time)
